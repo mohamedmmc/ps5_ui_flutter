@@ -10,17 +10,34 @@ import 'dashboard_controller.dart';
 import '../../constants/app_routes.dart';
 import '../../constants/app_colors.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   static const String routeName = AppRoutes.dashboardName;
   static const String routePath = AppRoutes.dashboard;
 
   const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final controller = Get.put(DashboardController());
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
 
-    return _DashboardScreenView(controller: controller);
+class _DashboardScreenState extends State<DashboardScreen> {
+  late final DashboardController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = Get.put(DashboardController());
+  }
+
+  @override
+  void dispose() {
+    Get.delete<DashboardController>();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _DashboardScreenView(controller: _controller);
   }
 }
 

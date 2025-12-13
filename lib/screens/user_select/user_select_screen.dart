@@ -7,17 +7,34 @@ import '../../constants/app_routes.dart';
 import '../../constants/app_colors.dart';
 import '../../constants/app_text_styles.dart';
 
-class UserSelectScreen extends StatelessWidget {
+class UserSelectScreen extends StatefulWidget {
   static const String routeName = AppRoutes.userSelectName;
   static const String routePath = AppRoutes.userSelect;
 
   const UserSelectScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final controller = Get.put(UserSelectController());
+  State<UserSelectScreen> createState() => _UserSelectScreenState();
+}
 
-    return _UserSelectScreenView(controller: controller);
+class _UserSelectScreenState extends State<UserSelectScreen> {
+  late final UserSelectController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = Get.put(UserSelectController());
+  }
+
+  @override
+  void dispose() {
+    Get.delete<UserSelectController>();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _UserSelectScreenView(controller: _controller);
   }
 }
 
@@ -28,14 +45,12 @@ class _UserSelectScreenView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: AppColors.black,
+    return SizedBox.expand(
       child: Padding(
         padding: const EdgeInsets.all(48.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Top Bar - Time
             Align(
               alignment: Alignment.centerRight,
               child: Obx(() => Text(
@@ -43,50 +58,32 @@ class _UserSelectScreenView extends StatelessWidget {
                     style: AppTextStyles.time,
                   )),
             ),
-
-            // Main Content
-            FadeTransition(
-              opacity: controller.fadeAnimation,
-              child: SlideTransition(
-                position: controller.slideAnimation,
-                child: const Column(
+            const Column(
+              children: [
+                Column(
                   children: [
-                    // Welcome Text
-                    Column(
-                      children: [
-                        Text(
-                          'Welcome Back to PlayStation',
-                          style: AppTextStyles.welcomeTitle,
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          "Who's using this controller?",
-                          style: AppTextStyles.welcomeSubtitle,
-                        ),
-                      ],
+                    Text(
+                      'Welcome Back to PlayStation',
+                      style: AppTextStyles.welcomeTitle,
                     ),
-
-                    SizedBox(height: 48),
-
-                    // User List
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // Add User Button
-                        _AddUserButton(),
-
-                        SizedBox(width: 48),
-
-                        // Current User Profile
-                        _UserProfile(),
-                      ],
+                    SizedBox(height: 8),
+                    Text(
+                      "Who's using this controller?",
+                      style: AppTextStyles.welcomeSubtitle,
                     ),
                   ],
                 ),
-              ),
+                SizedBox(height: 48),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _AddUserButton(),
+                    SizedBox(width: 48),
+                    _UserProfile(),
+                  ],
+                ),
+              ],
             ),
-
-            // Bottom Controls
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [

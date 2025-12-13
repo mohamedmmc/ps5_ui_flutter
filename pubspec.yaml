@@ -73,6 +73,35 @@ flutter:
     - assets/images/portfolio/thelandlord/
     - assets/images/portfolio/lost&found/
 
+  fonts:
+    - family: SST
+      fonts:
+        - asset: assets/images/fonts/SSTLight.TTF
+          weight: 300
+        - asset: assets/images/fonts/SSTLightIt.TTF
+          weight: 300
+          style: italic
+        - asset: assets/images/fonts/SSTRg.TTF
+          weight: 400
+        - asset: assets/images/fonts/SSTRgIt.TTF
+          weight: 400
+          style: italic
+        - asset: assets/images/fonts/SSTMedium.TTF
+          weight: 500
+        - asset: assets/images/fonts/SSTMediumIt.TTF
+          weight: 500
+          style: italic
+        - asset: assets/images/fonts/SSTBold.TTF
+          weight: 700
+        - asset: assets/images/fonts/SSTBoldIt.TTF
+          weight: 700
+          style: italic
+        - asset: assets/images/fonts/SSTHeavy.TTF
+          weight: 900
+        - asset: assets/images/fonts/SSTHeavyIt.TTF
+          weight: 900
+          style: italic
+
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 

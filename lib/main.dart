@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'screens/intro/intro_screen.dart';
 import 'screens/user_select/user_select_screen.dart';
 import 'screens/dashboard/dashboard_screen.dart';
+import 'widgets/ambient_background_shell.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,20 +26,61 @@ void main() {
 final GoRouter _router = GoRouter(
   initialLocation: IntroScreen.routePath,
   routes: [
-    GoRoute(
-      path: IntroScreen.routePath,
-      name: IntroScreen.routeName,
-      builder: (context, state) => const IntroScreen(),
-    ),
-    GoRoute(
-      path: UserSelectScreen.routePath,
-      name: UserSelectScreen.routeName,
-      builder: (context, state) => const UserSelectScreen(),
+    ShellRoute(
+      builder: (context, state, child) {
+        return AmbientBackgroundShell(
+          child: KeyedSubtree(
+            key: ValueKey(state.uri.toString()),
+            child: child,
+          ),
+        );
+      },
+      routes: [
+        GoRoute(
+          path: IntroScreen.routePath,
+          name: IntroScreen.routeName,
+          pageBuilder: (context, state) => NoTransitionPage(
+            key: state.pageKey,
+            child: const IntroScreen(),
+          ),
+        ),
+        GoRoute(
+          path: UserSelectScreen.routePath,
+          name: UserSelectScreen.routeName,
+          pageBuilder: (context, state) => NoTransitionPage(
+            key: state.pageKey,
+            child: const UserSelectScreen(),
+          ),
+        ),
+      ],
     ),
     GoRoute(
       path: DashboardScreen.routePath,
       name: DashboardScreen.routeName,
-      builder: (context, state) => const DashboardScreen(),
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        transitionDuration: const Duration(milliseconds: 650),
+        reverseTransitionDuration: const Duration(milliseconds: 650),
+        child: const DashboardScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          final curvedAnimation = CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeInOutCubic,
+            reverseCurve: Curves.easeInOutCubic,
+          );
+
+          return FadeTransition(
+            opacity: curvedAnimation,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 0.02),
+                end: Offset.zero,
+              ).animate(curvedAnimation),
+              child: child,
+            ),
+          );
+        },
+      ),
     ),
   ],
 );
@@ -54,7 +96,7 @@ class PS5UIApp extends StatelessWidget {
       theme: ThemeData(
         brightness: Brightness.dark,
         scaffoldBackgroundColor: Colors.black,
-        fontFamily: 'Roboto',
+        // fontFamily: 'SST',
         useMaterial3: true,
       ),
       routerDelegate: _router.routerDelegate,

@@ -123,7 +123,7 @@ class GameRow extends StatelessWidget {
       left: 32,
       right: 0,
       child: SizedBox(
-        height: 140,
+        height: 150,
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
           itemCount: games.length + 1, // +1 for the add button
@@ -242,12 +242,12 @@ class _GameCardState extends State<_GameCard> with SingleTickerProviderStateMixi
               offset: Offset(0, _yAnimation.value),
               child: AnimatedScale(
                 duration: const Duration(milliseconds: 200),
-                scale: _isHovered ? 1.05 : 1.0,
+                scale: _isHovered ? 1.3 : 1.0,
                 child: AnimatedOpacity(
                   duration: const Duration(milliseconds: 300),
-                  opacity: widget.isSelected || _isHovered ? _opacityAnimation.value : 0.7,
+                  opacity: 1, // widget.isSelected || _isHovered ? _opacityAnimation.value : 0.7,
                   child: Container(
-                    width: _sizeAnimation.value,
+                    width: 150,
                     height: _sizeAnimation.value,
                     decoration: BoxDecoration(
                       color: widget.parseColor(widget.game.iconBgColor),
