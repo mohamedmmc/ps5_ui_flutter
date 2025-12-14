@@ -1,54 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../models/game.dart';
-import 'dart:async';
+import '../utils/responsive.dart';
 
-class TopBar extends StatefulWidget {
+class TopBar extends StatelessWidget {
   final ContentType activeTab;
-  final Function(ContentType) onTabChange;
+  final ValueChanged<ContentType> onTabChange;
+  final RxString currentTime;
 
   const TopBar({
     super.key,
     required this.activeTab,
     required this.onTabChange,
+    required this.currentTime,
   });
 
   @override
-  State<TopBar> createState() => _TopBarState();
-}
-
-class _TopBarState extends State<TopBar> {
-  String currentTime = '';
-  Timer? _timer;
-
-  @override
-  void initState() {
-    super.initState();
-    _updateTime();
-    _timer = Timer.periodic(const Duration(seconds: 60), (_) => _updateTime());
-  }
-
-  void _updateTime() {
-    final now = DateTime.now();
-    final hour = now.hour > 12 ? now.hour - 12 : (now.hour == 0 ? 12 : now.hour);
-    final minute = now.minute.toString().padLeft(2, '0');
-    setState(() {
-      currentTime = '$hour:$minute';
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final isMobile = Responsive.isMobile(context);
+    final padding = isMobile ? 16.0 : 32.0;
+    final spacing = isMobile ? 16.0 : 32.0;
+
     return Positioned(
-      top: 32,
-      left: 32,
-      right: 32,
+      top: padding,
+      left: padding,
+      right: padding,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -57,43 +34,47 @@ class _TopBarState extends State<TopBar> {
             children: [
               _TabButton(
                 label: 'Games',
-                isActive: widget.activeTab == ContentType.game,
-                onTap: () => widget.onTabChange(ContentType.game),
+                isActive: activeTab == ContentType.game,
+                onTap: () => onTabChange(ContentType.game),
+                isMobile: isMobile,
               ),
-              const SizedBox(width: 32),
+              SizedBox(width: spacing),
               _TabButton(
                 label: 'Media',
-                isActive: widget.activeTab == ContentType.media,
-                onTap: () => widget.onTabChange(ContentType.media),
+                isActive: activeTab == ContentType.media,
+                onTap: () => onTabChange(ContentType.media),
+                isMobile: isMobile,
               ),
             ],
           ),
 
-          // Right Side - Icons and Time
+          // Right Side - Icons and Time (hide search/settings on mobile)
           Row(
             children: [
-              IconButton(
-                icon: const Icon(LucideIcons.search),
-                iconSize: 28,
-                color: Colors.white.withValues(alpha: 0.8),
-                onPressed: () {},
-                style: IconButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  padding: const EdgeInsets.all(8),
+              if (!isMobile) ...[
+                IconButton(
+                  icon: const Icon(LucideIcons.search),
+                  iconSize: 28,
+                  color: Colors.white.withValues(alpha: 0.8),
+                  onPressed: () {},
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    padding: const EdgeInsets.all(8),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              IconButton(
-                icon: const Icon(LucideIcons.settings),
-                iconSize: 28,
-                color: Colors.white.withValues(alpha: 0.8),
-                onPressed: () {},
-                style: IconButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  padding: const EdgeInsets.all(8),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(LucideIcons.settings),
+                  iconSize: 28,
+                  color: Colors.white.withValues(alpha: 0.8),
+                  onPressed: () {},
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    padding: const EdgeInsets.all(8),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 16),
+                const SizedBox(width: 16),
+              ],
 
               // User Avatar
               Stack(
@@ -103,20 +84,14 @@ class _TopBarState extends State<TopBar> {
                     height: 40,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      gradient: const LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [Color(0xFF3B82F6), Color(0xFF9333EA)],
+                      image: const DecorationImage(
+                        image: AssetImage('assets/images/mmc2.jpg'),
+                        fit: BoxFit.cover,
                       ),
                       border: Border.all(
                         color: Colors.white.withValues(alpha: 0.2),
                         width: 2,
                       ),
-                    ),
-                    child: const Icon(
-                      Icons.person,
-                      color: Colors.white,
-                      size: 20,
                     ),
                   ),
                   Positioned(
@@ -141,13 +116,15 @@ class _TopBarState extends State<TopBar> {
               const SizedBox(width: 16),
 
               // Time
-              Text(
-                currentTime,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.w300,
-                  fontFeatures: [FontFeature.tabularFigures()],
+              Obx(
+                () => Text(
+                  currentTime.value,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: isMobile ? 16 : 24,
+                    fontWeight: FontWeight.w300,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
                 ),
               ),
             ],
@@ -162,11 +139,13 @@ class _TabButton extends StatefulWidget {
   final String label;
   final bool isActive;
   final VoidCallback onTap;
+  final bool isMobile;
 
   const _TabButton({
     required this.label,
     required this.isActive,
     required this.onTap,
+    this.isMobile = false,
   });
 
   @override
@@ -187,7 +166,7 @@ class _TabButtonState extends State<_TabButton> {
           duration: const Duration(milliseconds: 300),
           style: TextStyle(
             color: widget.isActive ? Colors.white : (_isHovered ? Colors.white.withValues(alpha: 0.8) : Colors.white.withValues(alpha: 0.5)),
-            fontSize: 28,
+            fontSize: widget.isMobile ? 20 : 28, // Responsive font size
             fontWeight: FontWeight.w500,
             letterSpacing: -0.5,
             shadows: widget.isActive

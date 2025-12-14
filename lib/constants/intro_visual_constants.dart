@@ -10,7 +10,7 @@ class IntroVisualConstants {
   static const Color backgroundColor = Color.fromARGB(240, 10, 17, 41);
 
   // Particle System
-  static const int particleCount = 200;
+  static const int particleCount = 60; // Optimized from 200 for better performance
   static const double particleThickness = 0.35;
   static const double particleMinSize = 1.0;
   static const double particleMaxSize = 11.0;

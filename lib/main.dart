@@ -6,15 +6,18 @@ import 'screens/intro/intro_screen.dart';
 import 'screens/user_select/user_select_screen.dart';
 import 'screens/dashboard/dashboard_screen.dart';
 import 'widgets/ambient_background_shell.dart';
+import 'utils/url_strategy.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Set fullscreen mode and hide system UI
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-
-  // Lock orientation to landscape
+  setPathUrlStrategy();
+  // Allow all orientations for responsive design
   SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
     DeviceOrientation.landscapeLeft,
     DeviceOrientation.landscapeRight,
   ]);
@@ -96,7 +99,7 @@ class PS5UIApp extends StatelessWidget {
       theme: ThemeData(
         brightness: Brightness.dark,
         scaffoldBackgroundColor: Colors.black,
-        // fontFamily: 'SST',
+        fontFamily: 'SST',
         useMaterial3: true,
       ),
       routerDelegate: _router.routerDelegate,

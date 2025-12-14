@@ -111,5 +111,9 @@ class ParticlePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(ParticlePainter oldDelegate) => true;
+  bool shouldRepaint(ParticlePainter oldDelegate) {
+    // Only repaint if animation value changed significantly (performance optimization)
+    return (oldDelegate.animationValue - animationValue).abs() > 0.001 ||
+           oldDelegate.particles != particles;
+  }
 }

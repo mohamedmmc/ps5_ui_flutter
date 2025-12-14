@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/game.dart';
+import '../utils/responsive.dart';
 
 class GameRow extends StatelessWidget {
   final List<Game> games;
@@ -22,7 +23,7 @@ class GameRow extends StatelessWidget {
         width: double.infinity,
         height: double.infinity,
         color: const Color(0xFF27272A),
-        child: const Center(
+        child: Center(
           child: Icon(
             LucideIcons.layoutGrid,
             color: Colors.white,
@@ -67,6 +68,10 @@ class GameRow extends StatelessWidget {
         fit: BoxFit.cover,
         width: double.infinity,
         height: double.infinity,
+        memCacheWidth: 300, // Optimize game icon cache
+        memCacheHeight: 240,
+        maxWidthDiskCache: 300,
+        maxHeightDiskCache: 240,
         placeholder: (context, url) => Container(
           color: Colors.white.withValues(alpha: 0.1),
           child: const Center(
@@ -118,12 +123,17 @@ class GameRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = Responsive.isMobile(context);
+    final topPosition = isMobile ? 80.0 : 120.0;
+    final leftPadding = isMobile ? 16.0 : 32.0;
+    final cardHeight = isMobile ? 100.0 : 150.0;
+
     return Positioned(
-      top: 120,
-      left: 32,
+      top: topPosition,
+      left: leftPadding,
       right: 0,
       child: SizedBox(
-        height: 150,
+        height: cardHeight,
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
           itemCount: games.length + 1, // +1 for the add button
@@ -131,8 +141,8 @@ class GameRow extends StatelessWidget {
             if (index == games.length) {
               // Add button
               return Padding(
-                padding: const EdgeInsets.only(right: 20),
-                child: _AddButton(),
+                padding: EdgeInsets.only(right: isMobile ? 12 : 20),
+                child: _AddButton(isMobile: isMobile),
               );
             }
 
@@ -140,13 +150,14 @@ class GameRow extends StatelessWidget {
             final isSelected = selectedGameId == game.id;
 
             return Padding(
-              padding: const EdgeInsets.only(right: 20),
+              padding: EdgeInsets.only(right: isMobile ? 12 : 20),
               child: _GameCard(
                 game: game,
                 isSelected: isSelected,
                 onTap: () => onSelectGame(game.id),
                 renderIcon: _renderIcon,
                 parseColor: _parseColor,
+                isMobile: isMobile,
               ),
             );
           },
@@ -162,6 +173,7 @@ class _GameCard extends StatefulWidget {
   final VoidCallback onTap;
   final Widget Function(Game, bool) renderIcon;
   final Color Function(String?) parseColor;
+  final bool isMobile;
 
   const _GameCard({
     required this.game,
@@ -169,122 +181,79 @@ class _GameCard extends StatefulWidget {
     required this.onTap,
     required this.renderIcon,
     required this.parseColor,
+    this.isMobile = false,
   });
 
   @override
   State<_GameCard> createState() => _GameCardState();
 }
 
-class _GameCardState extends State<_GameCard> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _sizeAnimation;
-  late Animation<double> _opacityAnimation;
-  late Animation<double> _yAnimation;
+class _GameCardState extends State<_GameCard> {
   bool _isHovered = false;
+  late final Color _bgColor;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-    );
-
-    _sizeAnimation = Tween<double>(
-      begin: 90,
-      end: 120,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-
-    _opacityAnimation = Tween<double>(
-      begin: 0.7,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-
-    _yAnimation = Tween<double>(
-      begin: 0,
-      end: 10,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-
-    if (widget.isSelected) {
-      _controller.forward();
-    }
-  }
-
-  @override
-  void didUpdateWidget(_GameCard oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.isSelected != oldWidget.isSelected) {
-      if (widget.isSelected) {
-        _controller.forward();
-      } else {
-        _controller.reverse();
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
+    // Memoize color parsing for better performance
+    _bgColor = widget.parseColor(widget.game.iconBgColor);
   }
 
   @override
   Widget build(BuildContext context) {
+    final cardWidth = widget.isMobile ? 100.0 : 150.0;
+    final cardHeight = widget.isMobile ? 80.0 : 120.0;
+    final isActive = widget.isSelected || _isHovered;
+    final scale = widget.isSelected ? 1.12 : (_isHovered ? 1.06 : 1.0);
+
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: GestureDetector(
         onTap: widget.onTap,
-        child: AnimatedBuilder(
-          animation: _controller,
-          builder: (context, child) {
-            return Transform.translate(
-              offset: Offset(0, _yAnimation.value),
-              child: AnimatedScale(
-                duration: const Duration(milliseconds: 200),
-                scale: _isHovered ? 1.3 : 1.0,
-                child: AnimatedOpacity(
-                  duration: const Duration(milliseconds: 300),
-                  opacity: 1, // widget.isSelected || _isHovered ? _opacityAnimation.value : 0.7,
-                  child: Container(
-                    width: 150,
-                    height: _sizeAnimation.value,
-                    decoration: BoxDecoration(
-                      color: widget.parseColor(widget.game.iconBgColor),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Stack(
-                      children: [
-                        // Icon content
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child: widget.renderIcon(widget.game, widget.isSelected),
-                        ),
-
-                        // Selection border
-                        if (widget.isSelected)
-                          Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: Colors.white,
-                                width: 3,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.white.withValues(alpha: 0.4),
-                                  blurRadius: 20,
-                                ),
-                              ],
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
+        child: AnimatedScale(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeInOutCubic,
+          scale: scale,
+          child: AnimatedOpacity(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeInOut,
+            opacity: widget.isSelected ? 1.0 : (_isHovered ? 0.92 : 0.72),
+            child: Container(
+              width: cardWidth,
+              height: cardHeight,
+              decoration: BoxDecoration(
+                color: _bgColor, // Using memoized color for better performance
+                borderRadius: BorderRadius.circular(16),
               ),
-            );
-          },
+              child: Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: widget.renderIcon(widget.game, widget.isSelected),
+                  ),
+                  if (isActive)
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: widget.isSelected ? 0.9 : 0.35),
+                          width: widget.isSelected ? 3 : 2,
+                        ),
+                        boxShadow: widget.isSelected
+                            ? [
+                                BoxShadow(
+                                  color: Colors.white.withValues(alpha: 0.35),
+                                  blurRadius: 18,
+                                ),
+                              ]
+                            : null,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -292,6 +261,10 @@ class _GameCardState extends State<_GameCard> with SingleTickerProviderStateMixi
 }
 
 class _AddButton extends StatefulWidget {
+  final bool isMobile;
+
+  const _AddButton({this.isMobile = false});
+
   @override
   State<_AddButton> createState() => _AddButtonState();
 }
@@ -301,6 +274,10 @@ class _AddButtonState extends State<_AddButton> {
 
   @override
   Widget build(BuildContext context) {
+    final buttonWidth = widget.isMobile ? 100.0 : 150.0;
+    final buttonHeight = widget.isMobile ? 60.0 : 90.0;
+    final iconSize = widget.isMobile ? 24.0 : 32.0;
+
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
@@ -308,8 +285,8 @@ class _AddButtonState extends State<_AddButton> {
         onTap: () {},
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          width: 90,
-          height: 90,
+          width: buttonWidth,
+          height: buttonHeight,
           decoration: BoxDecoration(
             color: _isHovered ? Colors.white.withValues(alpha: 0.2) : Colors.white.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(16),
@@ -318,7 +295,7 @@ class _AddButtonState extends State<_AddButton> {
             child: Icon(
               LucideIcons.plus,
               color: Colors.white.withValues(alpha: 0.5),
-              size: 32,
+              size: iconSize,
             ),
           ),
         ),

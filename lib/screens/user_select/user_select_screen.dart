@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/gestures.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -6,6 +8,7 @@ import 'user_select_controller.dart';
 import '../../constants/app_routes.dart';
 import '../../constants/app_colors.dart';
 import '../../constants/app_text_styles.dart';
+import '../../utils/responsive.dart';
 
 class UserSelectScreen extends StatefulWidget {
   static const String routeName = AppRoutes.userSelectName;
@@ -45,9 +48,13 @@ class _UserSelectScreenView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = Responsive.isMobile(context);
+    final padding = isMobile ? 16.0 : 48.0;
+    final spacing = isMobile ? 24.0 : 48.0;
+
     return SizedBox.expand(
       child: Padding(
-        padding: const EdgeInsets.all(48.0),
+        padding: EdgeInsets.all(padding),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -55,34 +62,39 @@ class _UserSelectScreenView extends StatelessWidget {
               alignment: Alignment.centerRight,
               child: Obx(() => Text(
                     controller.currentTime.value,
-                    style: AppTextStyles.time,
+                    style: AppTextStyles.time.copyWith(
+                      fontSize: isMobile ? 16 : 24,
+                    ),
                   )),
             ),
-            const Column(
-              children: [
-                Column(
-                  children: [
-                    Text(
-                      'Welcome Back to PlayStation',
-                      style: AppTextStyles.welcomeTitle,
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      "Who's using this controller?",
-                      style: AppTextStyles.welcomeSubtitle,
-                    ),
-                  ],
-                ),
-                SizedBox(height: 48),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _AddUserButton(),
-                    SizedBox(width: 48),
-                    _UserProfile(),
-                  ],
-                ),
-              ],
+            Flexible(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Column(
+                    children: [
+                      Text(
+                        'Welcome Back to PlayStation',
+                        style: AppTextStyles.welcomeTitle.copyWith(
+                          fontSize: isMobile ? 20 : 32,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: isMobile ? 4 : 8),
+                      Text(
+                        "Who's using this controller?",
+                        style: AppTextStyles.welcomeSubtitle.copyWith(
+                          fontSize: isMobile ? 14 : 18,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: spacing),
+                  // Carousel with Add User button integrated
+                  const _UserProfilesCarousel(),
+                ],
+              ),
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -92,8 +104,8 @@ class _UserSelectScreenView extends StatelessWidget {
                     LucideIcons.power,
                     color: AppColors.white50,
                   ),
-                  iconSize: 24,
-                  onPressed: () {},
+                  iconSize: isMobile ? 20 : 24,
+                  onPressed: () => GoRouter.of(context).go(AppRoutes.intro),
                 ),
               ],
             ),
@@ -104,169 +116,386 @@ class _UserSelectScreenView extends StatelessWidget {
   }
 }
 
-class _AddUserButton extends StatefulWidget {
-  const _AddUserButton();
+class _ProfileData {
+  final String name;
+  final String? avatarAssetPath;
+  final bool isAddButton;
 
-  @override
-  State<_AddUserButton> createState() => _AddUserButtonState();
+  const _ProfileData({
+    required this.name,
+    this.avatarAssetPath,
+    this.isAddButton = false,
+  });
 }
 
-class _AddUserButtonState extends State<_AddUserButton> {
-  bool _isHovered = false;
+class _UserProfilesCarousel extends StatefulWidget {
+  const _UserProfilesCarousel();
+
+  @override
+  State<_UserProfilesCarousel> createState() => _UserProfilesCarouselState();
+}
+
+class _UserProfilesCarouselState extends State<_UserProfilesCarousel> with SingleTickerProviderStateMixin {
+  late final ScrollController _scrollController;
+  late final AnimationController _enterController;
+  late final FocusNode _focusNode;
+
+  int _activeIndex = 1; // Start at index 1 (MMC)
+  int? _hoveredIndex;
+
+  final List<_ProfileData> _profiles = const [
+    _ProfileData(
+      name: 'Add User',
+      isAddButton: true,
+    ),
+    _ProfileData(
+      name: 'MMC',
+      avatarAssetPath: 'assets/images/mmc2.jpg',
+    ),
+    _ProfileData(name: 'Guest 1'),
+    _ProfileData(name: 'Guest 2'),
+    _ProfileData(name: 'Guest 3'),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    _enterController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 850),
+    )..forward();
+
+    _focusNode = FocusNode(debugLabel: 'UserSelectCarousel');
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _focusNode.requestFocus();
+        _scrollToIndex(_activeIndex, animate: false);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _enterController.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  double _stagger(int index) {
+    final t = _enterController.value;
+    final start = 0.05 * index;
+    final raw = ((t - start) / (1.0 - start)).clamp(0.0, 1.0);
+    return Curves.easeOutCubic.transform(raw);
+  }
+
+  void _scrollToIndex(int index, {bool animate = true}) {
+    if (!_scrollController.hasClients) return;
+
+    final isMobile = Responsive.isMobile(context);
+    final cardWidth = isMobile ? 140.0 : 180.0;
+    final spacing = isMobile ? 16.0 : 24.0;
+    final itemWidth = cardWidth + spacing;
+
+    // Calculate offset to center the selected item
+    final screenWidth = MediaQuery.of(context).size.width;
+    final targetOffset = (index * itemWidth) - (screenWidth / 2) + (cardWidth / 2);
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    final clampedOffset = targetOffset.clamp(0.0, maxScroll);
+
+    if (animate) {
+      _scrollController.animateTo(
+        clampedOffset,
+        duration: const Duration(milliseconds: 420),
+        curve: Curves.easeOutCubic,
+      );
+    } else {
+      _scrollController.jumpTo(clampedOffset);
+    }
+  }
+
+  void _moveCursor(int direction) {
+    if (direction == 0) return;
+
+    final nextIndex = (_activeIndex + direction).clamp(0, _profiles.length - 1).toInt();
+    if (nextIndex == _activeIndex) return;
+
+    setState(() => _activeIndex = nextIndex);
+    _scrollToIndex(nextIndex);
+  }
+
+  void _setActiveIndex(int index) {
+    final nextIndex = index.clamp(0, _profiles.length - 1).toInt();
+    if (nextIndex == _activeIndex) return;
+
+    setState(() => _activeIndex = nextIndex);
+    _scrollToIndex(nextIndex);
+  }
+
+  void _activate(BuildContext context) {
+    final activeProfile = _profiles[_activeIndex];
+    // Don't navigate if it's the add button or not MMC
+    if (activeProfile.isAddButton) return;
+    if (activeProfile.name != 'MMC') return;
+    GoRouter.of(context).go(AppRoutes.dashboard);
+  }
 
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: GestureDetector(
-        onTap: () {},
-        child: AnimatedOpacity(
-          duration: const Duration(milliseconds: 200),
-          opacity: _isHovered ? 1.0 : 0.5,
-          child: Column(
-            children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: 96,
-                height: 96,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.darkGray,
-                  border: Border.all(
-                    color: _isHovered ? AppColors.white : AppColors.transparent,
-                    width: 2,
-                  ),
-                ),
-                transform: _isHovered ? Matrix4.identity().scaled(1.05) : Matrix4.identity(),
-                child: const Icon(
-                  LucideIcons.plus,
-                  color: AppColors.white,
-                  size: 32,
-                ),
+    final isMobile = Responsive.isMobile(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // Larger cards for desktop, smaller for mobile
+    final cardWidth = isMobile ? 140.0 : 220.0;
+    final cardHeight = isMobile ? 200.0 : 280.0;
+    final spacing = isMobile ? 16.0 : 32.0;
+
+    return SizedBox(
+      width: screenWidth,
+      height: cardHeight,
+      child: Focus(
+        focusNode: _focusNode,
+        autofocus: true,
+        onKeyEvent: (node, event) {
+          if (event is! KeyDownEvent) return KeyEventResult.ignored;
+
+          if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+            _moveCursor(1);
+            return KeyEventResult.handled;
+          }
+          if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+            _moveCursor(-1);
+            return KeyEventResult.handled;
+          }
+          if (event.logicalKey == LogicalKeyboardKey.enter || event.logicalKey == LogicalKeyboardKey.select || event.logicalKey == LogicalKeyboardKey.space) {
+            _activate(context);
+            return KeyEventResult.handled;
+          }
+
+          return KeyEventResult.ignored;
+        },
+        child: AnimatedBuilder(
+          animation: _enterController,
+          builder: (context, child) {
+            return ScrollConfiguration(
+              behavior: ScrollConfiguration.of(context).copyWith(
+                dragDevices: {
+                  PointerDeviceKind.touch,
+                  PointerDeviceKind.mouse,
+                },
+                scrollbars: false,
               ),
-              const SizedBox(height: 16),
-              const Text(
-                'Add User',
-                style: AppTextStyles.addUserButton,
+              child: ListView.builder(
+                controller: _scrollController,
+                scrollDirection: Axis.horizontal,
+                // padding: EdgeInsets.symmetric(horizontal: screenWidth / 2 - cardWidth / 2),
+                itemCount: _profiles.length,
+                itemBuilder: (context, index) {
+                  final entry = _stagger(index);
+                  final isActive = index == _activeIndex;
+                  final isHovered = index == _hoveredIndex;
+
+                  // Entry animation
+                  final entryOffsetX = (1.0 - entry) * (100 + (index * 30));
+                  final entryOpacity = 0.25 + (0.75 * entry);
+
+                  // Calculate opacity based on distance from center
+                  double distanceOpacity = 1.0;
+                  if (_scrollController.hasClients) {
+                    final scrollCenter = _scrollController.offset + (screenWidth / 2);
+                    final itemCenter = (index * (cardWidth + spacing)) + (cardWidth / 2);
+                    final distance = (scrollCenter - itemCenter).abs();
+                    final maxDistance = screenWidth / 2;
+
+                    if (distance > cardWidth / 2) {
+                      final fadeDistance = distance - (cardWidth / 2);
+                      distanceOpacity = (1.0 - (fadeDistance / maxDistance)).clamp(0.15, 1.0);
+                    }
+                  }
+
+                  final effectiveOpacity = (isActive ? 1.0 : distanceOpacity) * entryOpacity;
+
+                  return Padding(
+                    padding: EdgeInsets.only(right: spacing),
+                    child: Transform.translate(
+                      offset: Offset(entryOffsetX, 0),
+                      child: Opacity(
+                        opacity: effectiveOpacity.clamp(0.0, 1.0),
+                        child: _UserProfileCard(
+                          profile: _profiles[index],
+                          isActive: isActive,
+                          isHovered: isHovered,
+                          cardWidth: cardWidth,
+                          cardHeight: cardHeight,
+                          onHoverChanged: (hovered) {
+                            setState(() => _hoveredIndex = hovered ? index : null);
+                          },
+                          onTap: () {
+                            if (_activeIndex != index) {
+                              _setActiveIndex(index);
+                              return;
+                            }
+                            _activate(context);
+                          },
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
   }
 }
 
-class _UserProfile extends StatefulWidget {
-  const _UserProfile();
+class _UserProfileCard extends StatelessWidget {
+  final _ProfileData profile;
+  final bool isActive;
+  final bool isHovered;
+  final VoidCallback onTap;
+  final ValueChanged<bool> onHoverChanged;
+  final double cardWidth;
+  final double cardHeight;
 
-  @override
-  State<_UserProfile> createState() => _UserProfileState();
-}
-
-class _UserProfileState extends State<_UserProfile> {
-  bool _isHovered = false;
+  const _UserProfileCard({
+    required this.profile,
+    required this.isActive,
+    required this.isHovered,
+    required this.onTap,
+    required this.onHoverChanged,
+    required this.cardWidth,
+    required this.cardHeight,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = Responsive.isMobile(context);
+    final scale = (isActive ? 1.12 : 1.0) * (isHovered ? 1.06 : 1.0);
+    final borderColor = (isHovered || isActive) ? AppColors.white : AppColors.transparent;
+    final shadowOpacity = isHovered || isActive ? 0.25 : 0.0;
+    final avatarSize = isMobile ? 120.0 : 190.0;
+
     return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
+      onEnter: (_) => onHoverChanged(true),
+      onExit: (_) => onHoverChanged(false),
       child: GestureDetector(
-        onTap: () => GoRouter.of(context).go(AppRoutes.dashboard),
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            AnimatedContainer(
+            AnimatedScale(
               duration: const Duration(milliseconds: 200),
-              width: 128,
-              height: 128,
-              transform: _isHovered ? Matrix4.identity().scaled(1.05) : Matrix4.identity(),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: _isHovered ? AppColors.white : AppColors.transparent,
-                  width: 4,
-                ),
-                boxShadow: _isHovered
-                    ? [
-                        BoxShadow(
-                          color: AppColors.white.withValues(alpha: 0.3),
-                          blurRadius: 30,
-                        ),
-                      ]
-                    : [],
-              ),
-              child: ClipOval(
-                child: Stack(
-                  children: [
-                    Container(
-                      width: 128,
-                      height: 128,
-                      decoration: const BoxDecoration(
-                        color: AppColors.darkGray,
-                      ),
-                      child: const Icon(
-                        Icons.person,
-                        size: 64,
-                        color: AppColors.white54,
-                      ),
-                    ),
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      color: _isHovered ? AppColors.transparent : AppColors.black.withValues(alpha: 0.2),
+              curve: Curves.easeOutCubic,
+              scale: scale,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: avatarSize,
+                height: avatarSize,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: borderColor,
+                    width: 4,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.white.withValues(alpha: shadowOpacity),
+                      blurRadius: 30,
                     ),
                   ],
                 ),
+                child: ClipOval(
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      _UserAvatar(
+                        name: profile.name,
+                        avatarAssetPath: profile.avatarAssetPath,
+                        isAddButton: profile.isAddButton,
+                      ),
+                      if (!profile.isAddButton)
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          color: isHovered ? AppColors.transparent : AppColors.black.withValues(alpha: 0.25),
+                        ),
+                    ],
+                  ),
+                ),
               ),
             ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                const Text(
-                  'New User',
-                  style: AppTextStyles.userName,
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: AppColors.plusBadge,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                  child: const Text(
-                    'PLUS',
-                    style: AppTextStyles.plusBadge,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                Container(
-                  width: 16,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    color: AppColors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                  child: Center(
-                    child: Container(
-                      width: 8,
-                      height: 1,
-                      color: AppColors.white,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 4),
-                const Text(
-                  'Options',
-                  style: AppTextStyles.userOptions,
-                ),
-              ],
+            SizedBox(height: isMobile ? 12 : 20),
+            Text(
+              profile.name,
+              style: AppTextStyles.userName.copyWith(
+                fontSize: isMobile ? 16 : 24,
+              ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _UserAvatar extends StatelessWidget {
+  final String name;
+  final String? avatarAssetPath;
+  final bool isAddButton;
+
+  const _UserAvatar({
+    required this.name,
+    required this.avatarAssetPath,
+    this.isAddButton = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Render Add User button
+    if (isAddButton) {
+      final isMobile = Responsive.isMobile(context);
+      final iconSize = isMobile ? 48.0 : 80.0;
+
+      return Container(
+        color: AppColors.darkGray,
+        child: Center(
+          child: Icon(
+            LucideIcons.plus,
+            color: AppColors.white,
+            size: iconSize,
+          ),
+        ),
+      );
+    }
+
+    if (avatarAssetPath != null) {
+      return Image.asset(
+        avatarAssetPath!,
+        fit: BoxFit.cover,
+      );
+    }
+
+    final isMobile = Responsive.isMobile(context);
+    final initials = name.trim().isEmpty ? '?' : name.trim().split(RegExp(r'\\s+')).where((s) => s.isNotEmpty).take(2).map((s) => s.characters.first.toUpperCase()).join();
+
+    final hue = (name.codeUnits.fold<int>(0, (sum, c) => sum + c) % 360).toDouble();
+    final color = HSLColor.fromAHSL(1.0, hue, 0.35, 0.32).toColor();
+
+    return Container(
+      color: color,
+      child: Center(
+        child: Text(
+          initials,
+          style: TextStyle(
+            color: AppColors.white,
+            fontSize: isMobile ? 32 : 42,
+            fontWeight: FontWeight.w500,
+            decoration: TextDecoration.none,
+          ),
         ),
       ),
     );

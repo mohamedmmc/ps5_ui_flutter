@@ -57,6 +57,7 @@ class _IntroScreenView extends StatelessWidget {
             Text(
               'Press the PS button on your controller.',
               style: AppTextStyles.introInstruction,
+              textAlign: TextAlign.center,
             ),
             const Spacer(),
             PulsingPlayButton(

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="robots" content="noindex" />
+    <title>Redirecting…</title>
+    <script>
+      // GitHub Pages does not support .htaccess / rewrite rules.
+      // This redirects deep links back to index.html so Flutter/go_router can handle routing.
+      //
+      // If you deploy under a repo subpath (project pages), set segmentCount = 1
+      // and build with: flutter build web --base-href /<repo>/
+      (function () {
+        var segmentCount = 0;
+        var l = window.location;
+        var base =
+          l.protocol +
+          '//' +
+          l.hostname +
+          (l.port ? ':' + l.port : '') +
+          l.pathname.split('/').slice(0, 1 + segmentCount).join('/') +
+          '/';
+
+        var path =
+          '/' + l.pathname.slice(1).split('/').slice(segmentCount).join('/');
+        var query = l.search ? '&q=' + l.search.slice(1) : '';
+
+        l.replace(base + '?p=' + encodeURIComponent(path) + query + l.hash);
+      })();
+    </script>
+  </head>
+  <body></body>
+</html>
+

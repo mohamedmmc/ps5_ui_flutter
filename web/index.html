@@ -33,6 +33,20 @@
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
+  <script>
+    // Support GitHub Pages deep links (see web/404.html).
+    (function (l) {
+      var params = new URLSearchParams(l.search);
+      var p = params.get('p');
+      if (!p) return;
+
+      var decodedPath = decodeURIComponent(p);
+      var q = params.get('q');
+      var search = q ? '?' + q : '';
+
+      window.history.replaceState(null, null, decodedPath + search + l.hash);
+    })(window.location);
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

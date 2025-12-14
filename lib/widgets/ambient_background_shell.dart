@@ -5,6 +5,7 @@ import '../constants/intro_animation_constants.dart';
 import '../constants/intro_visual_constants.dart';
 import '../models/particle.dart';
 import '../utils/particle_generator.dart';
+import '../utils/responsive.dart';
 import 'light_beam_widget.dart';
 import 'particle_system_widget.dart';
 
@@ -29,7 +30,7 @@ class AmbientBackgroundShell extends StatefulWidget {
 class _AmbientBackgroundShellState extends State<AmbientBackgroundShell> with TickerProviderStateMixin {
   late final AnimationController _lightBeamController;
   late final AnimationController _particleController;
-  late final List<Particle> _particles;
+  late List<Particle> _particles; // Not final to allow responsive adjustment
 
   final ParticleGenerator _particleGenerator = ParticleGenerator();
 
@@ -46,7 +47,18 @@ class _AmbientBackgroundShellState extends State<AmbientBackgroundShell> with Ti
       duration: IntroAnimationConstants.particleDuration,
     )..repeat();
 
+    // Initialize with default particle count (will be adjusted in build)
     _particles = _particleGenerator.generateParticles(IntroVisualConstants.particleCount);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Adjust particle count based on screen size for better mobile performance
+    final responsiveCount = Responsive.getParticleCount(context);
+    if (_particles.length != responsiveCount) {
+      _particles = _particleGenerator.generateParticles(responsiveCount);
+    }
   }
 
   @override
@@ -65,8 +77,10 @@ class _AmbientBackgroundShellState extends State<AmbientBackgroundShell> with Ti
       child: Stack(
         children: [
           Positioned.fill(
-            child: LightBeamWidget(
-              lightBeamController: _lightBeamController,
+            child: RepaintBoundary(
+              child: LightBeamWidget(
+                lightBeamController: _lightBeamController,
+              ),
             ),
           ),
           Positioned(
@@ -88,9 +102,11 @@ class _AmbientBackgroundShellState extends State<AmbientBackgroundShell> with Ti
             ),
           ),
           Positioned.fill(
-            child: ParticleSystemWidget(
-              particleController: _particleController,
-              particles: _particles,
+            child: RepaintBoundary(
+              child: ParticleSystemWidget(
+                particleController: _particleController,
+                particles: _particles,
+              ),
             ),
           ),
           Positioned.fill(
