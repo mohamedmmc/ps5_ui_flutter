@@ -1,17 +1,22 @@
 import 'dart:ui' show ImageFilter;
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import '../../models/game.dart';
-import '../../data/games_data.dart';
-import '../../widgets/top_bar.dart';
-import '../../widgets/game_row.dart';
-import '../../widgets/hero_section.dart';
-import 'dashboard_controller.dart';
-import '../../constants/app_routes.dart';
+import 'package:go_router/go_router.dart';
+
 import '../../constants/app_colors.dart';
+import '../../constants/app_routes.dart';
+import '../../data/games_data.dart';
+import '../../models/game.dart';
+import '../../utils/hero_tags.dart';
 import '../../utils/responsive.dart';
+import '../../widgets/top_bar.dart';
+import 'dashboard_controller.dart';
+import 'games/games_dashboard_panel.dart';
+import 'media/media_dashboard_panel.dart';
+import 'widgets/playstation_profile_menu.dart';
+import 'widgets/playstation_settings_menu.dart';
 
 class DashboardScreen extends StatefulWidget {
   static const String routeName = AppRoutes.dashboardName;
@@ -38,16 +43,83 @@ class _DashboardScreenState extends State<DashboardScreen> {
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return _DashboardScreenView(controller: _controller);
+  void _showOverlayMessage(String message) {
+    if (!mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.clearSnackBars();
+    messenger.showSnackBar(
+      SnackBar(
+        backgroundColor: const Color(0xEE101520),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        content: Text(
+          message,
+          style: const TextStyle(color: Colors.white),
+        ),
+      ),
+    );
   }
-}
 
-class _DashboardScreenView extends StatelessWidget {
-  final DashboardController controller;
+  Future<void> _openSettingsMenu() async {
+    await showGeneralDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Settings Menu',
+      transitionDuration: const Duration(milliseconds: 220),
+      pageBuilder: (context, _, __) {
+        return PlayStationSettingsMenu(
+          onJokeSelected: _showOverlayMessage,
+        );
+      },
+      transitionBuilder: (context, animation, _, child) {
+        return FadeTransition(
+          opacity: animation,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.98, end: 1.0).animate(animation),
+            child: child,
+          ),
+        );
+      },
+    );
+  }
 
-  const _DashboardScreenView({required this.controller});
+  Future<void> _openProfileMenu() async {
+    await showGeneralDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Profile Menu',
+      barrierColor: Colors.transparent,
+      transitionDuration: const Duration(milliseconds: 180),
+      pageBuilder: (context, _, __) {
+        return PlayStationProfileMenu(
+          onMessageSelected: _showOverlayMessage,
+        );
+      },
+      transitionBuilder: (context, animation, _, child) {
+        return FadeTransition(opacity: animation, child: child);
+      },
+    );
+  }
+
+  void _launchSelectedGame() {
+    if (_controller.activeTab.value != ContentType.game) return;
+
+    context.pushNamed(
+      AppRoutes.gameDetailsName,
+      pathParameters: {'gameId': _controller.selectedItem.id},
+    );
+  }
+
+  void _openSelectedMedia() {
+    final app = _controller.selectedItem;
+    _showOverlayMessage('${app.title} launched. Popcorn sold separately.');
+  }
+
+  void _handleSearch() {
+    _showOverlayMessage(
+        'Search is in stealth mode. It is hiding from feature creep.');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +127,6 @@ class _DashboardScreenView extends StatelessWidget {
       backgroundColor: AppColors.black,
       body: Stack(
         children: [
-          // Dynamic Background
           Positioned.fill(
             child: Obx(
               () => AnimatedSwitcher(
@@ -73,7 +144,6 @@ class _DashboardScreenView extends StatelessWidget {
                   );
                 },
                 transitionBuilder: (child, animation) {
-                  // Simplified transition for better performance (removed ScaleTransition)
                   return FadeTransition(
                     opacity: CurvedAnimation(
                       parent: animation,
@@ -84,116 +154,72 @@ class _DashboardScreenView extends StatelessWidget {
                   );
                 },
                 child: Stack(
-                  key: ValueKey(controller.selectedItem.background),
+                  key: ValueKey(_controller.selectedItem.background),
                   fit: StackFit.expand,
                   children: [
-                    _DashboardBackground(game: controller.selectedItem),
-
-                    // Opacity overlay
-                    Container(
-                      color: AppColors.black.withValues(alpha: 0.2),
-                    ),
-
-                    // Gradient overlays for readability
-                    Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                          colors: [
-                            AppColors.black.withValues(alpha: 0.6),
-                            AppColors.black.withValues(alpha: 0.2),
-                            AppColors.transparent,
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            AppColors.black,
-                            AppColors.black.withValues(alpha: 0.1),
-                            AppColors.transparent,
-                          ],
-                          stops: const [0.0, 0.2, 0.5],
-                        ),
-                      ),
-                    ),
-
-                    // Top gradient for top bar visibility
-                    Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            AppColors.black.withValues(alpha: 0.8),
-                            AppColors.transparent,
-                          ],
-                          stops: const [0.0, 0.3],
-                        ),
-                      ),
-                    ),
+                    _DashboardBackground(game: _controller.selectedItem),
                   ],
                 ),
               ),
             ),
           ),
-
-          // Decorative glow
           Positioned(
             top: 0,
             right: 0,
-            child: Container(
+            child: SizedBox(
               width: 500,
               height: 500,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    AppColors.blue.withValues(alpha: 0.1),
-                    AppColors.transparent,
-                  ],
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      AppColors.blue.withValues(alpha: 0.1),
+                      AppColors.transparent,
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
-
-          // Main UI
           FadeTransition(
             opacity: Tween<double>(begin: 0.0, end: 1.0).animate(
               CurvedAnimation(
-                parent: controller.fadeController,
+                parent: _controller.fadeController,
                 curve: Curves.easeOut,
               ),
             ),
-            child: Obx(() => Stack(
-                  children: [
-                    // Top Bar
-                    TopBar(
-                      activeTab: controller.activeTab.value,
-                      onTabChange: controller.handleTabChange,
-                      currentTime: controller.currentTime,
+            child: Obx(
+              () => Stack(
+                children: [
+                  TopBar(
+                    activeTab: _controller.activeTab.value,
+                    onTabChange: _controller.handleTabChange,
+                    currentTime: _controller.currentTime,
+                    onSettingsTap: _openSettingsMenu,
+                    onProfileTap: _openProfileMenu,
+                    onSearchTap: _handleSearch,
+                  ),
+                  if (_controller.activeTab.value == ContentType.game)
+                    GamesDashboardPanel(
+                      games: games,
+                      selectedGameId: _controller.selectedGameId.value,
+                      selectedGame: _controller.selectedItem,
+                      onSelectGame: _controller.handleSelect,
+                      onLaunchGame: _launchSelectedGame,
+                    )
+                  else
+                    MediaDashboardPanel(
+                      mediaApps: mediaApps,
+                      selectedMediaId: _controller.selectedMediaId.value,
+                      selectedMedia: _controller.selectedItem,
+                      featuredMedia: featuredMedia,
+                      onSelectMedia: _controller.handleSelect,
+                      onOpenMedia: _openSelectedMedia,
                     ),
-
-                    // Game Row
-                    GameRow(
-                      games: controller.currentList,
-                      selectedGameId: controller.currentId,
-                      onSelectGame: controller.handleSelect,
-                    ),
-
-                    // Hero Section
-                    HeroSection(
-                      game: controller.selectedItem,
-                      featuredMedia: controller.activeTab.value == ContentType.media ? featuredMedia : null,
-                    ),
-                  ],
-                )),
+                ],
+              ),
+            ),
           ),
         ],
       ),
@@ -211,15 +237,17 @@ class _DashboardBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (!_isAssetBackground) {
-      return CachedNetworkImage(
-        imageUrl: game.background,
-        fit: BoxFit.cover,
-        memCacheWidth: 1920, // Optimize memory usage
-        memCacheHeight: 1080,
-        maxWidthDiskCache: 1920,
-        maxHeightDiskCache: 1080,
-        placeholder: (context, url) => Container(
-          color: AppColors.black,
+      return Hero(
+        tag: gameBackgroundLaunchHeroTag(game.id),
+        transitionOnUserGestures: true,
+        child: CachedNetworkImage(
+          imageUrl: game.background,
+          fit: BoxFit.cover,
+          memCacheWidth: 1920,
+          memCacheHeight: 1080,
+          maxWidthDiskCache: 1920,
+          maxHeightDiskCache: 1080,
+          placeholder: (context, _) => const ColoredBox(color: AppColors.black),
         ),
       );
     }
@@ -231,8 +259,8 @@ class _DashboardBackground extends StatelessWidget {
         return Stack(
           fit: StackFit.expand,
           children: [
-            Container(color: AppColors.black),
-            Container(
+            const ColoredBox(color: AppColors.black),
+            DecoratedBox(
               decoration: BoxDecoration(
                 gradient: RadialGradient(
                   center: Alignment.centerRight,
@@ -256,7 +284,7 @@ class _DashboardBackground extends StatelessWidget {
                     imageFilter: ImageFilter.blur(
                       sigmaX: Responsive.getBlurIntensity(context),
                       sigmaY: Responsive.getBlurIntensity(context),
-                    ), // Responsive blur for better mobile performance
+                    ),
                     child: SizedBox(
                       width: size,
                       height: size,
@@ -273,13 +301,18 @@ class _DashboardBackground extends StatelessWidget {
             Align(
               alignment: Alignment.centerRight,
               child: Transform.translate(
-                offset: Offset(constraints.maxWidth * 0.08, constraints.maxHeight * 0.02),
+                offset: Offset(
+                    constraints.maxWidth * 0.08, constraints.maxHeight * 0.02),
                 child: Opacity(
                   opacity: 0.24,
                   child: SizedBox(
                     width: size * 0.62,
                     height: size * 0.62,
-                    child: _DashboardIcon(path: game.background),
+                    child: Hero(
+                      tag: gameBackgroundLaunchHeroTag(game.id),
+                      transitionOnUserGestures: true,
+                      child: _DashboardIcon(path: game.background),
+                    ),
                   ),
                 ),
               ),
@@ -302,10 +335,10 @@ class _DashboardIcon extends StatelessWidget {
       return CachedNetworkImage(
         imageUrl: path,
         fit: BoxFit.contain,
-        memCacheWidth: 400, // Optimize icon cache
+        memCacheWidth: 400,
         memCacheHeight: 400,
-        placeholder: (context, url) => const SizedBox.shrink(),
-        errorWidget: (context, url, error) => const SizedBox.shrink(),
+        placeholder: (context, _) => const SizedBox.shrink(),
+        errorWidget: (context, _, __) => const SizedBox.shrink(),
       );
     }
 
@@ -313,7 +346,7 @@ class _DashboardIcon extends StatelessWidget {
       path,
       fit: BoxFit.contain,
       filterQuality: FilterQuality.high,
-      errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+      errorBuilder: (context, _, __) => const SizedBox.shrink(),
     );
   }
 }

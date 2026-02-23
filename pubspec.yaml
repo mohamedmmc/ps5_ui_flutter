@@ -73,6 +73,7 @@ flutter:
     - assets/images/portfolio/esprit/
     - assets/images/portfolio/thelandlord/
     - assets/images/portfolio/lost&found/
+    - assets/images/portfolio/max_muscle_coaching/
 
   fonts:
     - family: SST

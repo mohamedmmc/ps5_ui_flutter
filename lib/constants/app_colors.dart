@@ -5,6 +5,7 @@ class AppColors {
   static const Color black = Color(0xFF000000);
   static const Color almostBlack = Color(0xFF050505);
   static const Color darkGray = Color(0xFF27272A);
+  static const Color darkerGray = Color(0xFF18181B);
 
   // White variations
   static const Color white = Color(0xFFFFFFFF);
@@ -24,6 +25,19 @@ class AppColors {
 
   // Blue colors
   static const Color blue = Color(0xFF3B82F6);
+  static const Color blueLight = Color(0xFF60A5FA);
+
+  // Green colors
+  static const Color onlineGreen = Color(0xFF10B981);
+
+  // Red colors
+  static const Color red = Color(0xFFEF4444);
+
+  // Trophy colors
+  static const Color trophyPlatinum = Color(0xFFE5E7EB);
+  static const Color trophyGold = Color(0xFFFBBF24);
+  static const Color trophySilver = Color(0xFF9CA3AF);
+  static const Color trophyBronze = Color(0xFFB45309);
 
   // Transparent
   static const Color transparent = Colors.transparent;

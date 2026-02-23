@@ -17,16 +17,13 @@ class ParticleSystemWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: particleController,
-      builder: (context, child) {
-        return CustomPaint(
-          painter: ParticlePainter(
-            particles: particles,
-            animationValue: particleController.value,
-          ),
-        );
-      },
+    return CustomPaint(
+      painter: ParticlePainter(
+        particles: particles,
+        animation: particleController,
+      ),
+      isComplex: true,
+      willChange: true,
     );
   }
 }

@@ -86,17 +86,19 @@ class _AmbientBackgroundShellState extends State<AmbientBackgroundShell> with Ti
           Positioned(
             top: -screenSize.height * 0.2,
             left: -screenSize.width * 0.1,
-            child: Container(
+            child: SizedBox(
               width: screenSize.width,
               height: screenSize.width,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    AppColors.golden.withValues(alpha: 0.15),
-                    AppColors.transparent,
-                  ],
-                  stops: const [0.0, 0.6],
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      AppColors.golden.withValues(alpha: 0.15),
+                      AppColors.transparent,
+                    ],
+                    stops: const [0.0, 0.6],
+                  ),
                 ),
               ),
             ),

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+
+import '../constants/app_colors.dart';
+import '../constants/app_text_styles.dart';
 import '../models/game.dart';
 import '../utils/responsive.dart';
 
@@ -8,12 +11,20 @@ class TopBar extends StatelessWidget {
   final ContentType activeTab;
   final ValueChanged<ContentType> onTabChange;
   final RxString currentTime;
+  final VoidCallback onSettingsTap;
+  final VoidCallback onProfileTap;
+  final VoidCallback? onSearchTap;
+  final String profileName;
 
   const TopBar({
     super.key,
     required this.activeTab,
     required this.onTabChange,
     required this.currentTime,
+    required this.onSettingsTap,
+    required this.onProfileTap,
+    this.onSearchTap,
+    this.profileName = 'Mohamed Melek',
   });
 
   @override
@@ -29,7 +40,6 @@ class TopBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Tabs
           Row(
             children: [
               _TabButton(
@@ -47,87 +57,128 @@ class TopBar extends StatelessWidget {
               ),
             ],
           ),
-
-          // Right Side - Icons and Time (hide search/settings on mobile)
           Row(
             children: [
               if (!isMobile) ...[
                 IconButton(
                   icon: const Icon(LucideIcons.search),
-                  iconSize: 28,
-                  color: Colors.white.withValues(alpha: 0.8),
-                  onPressed: () {},
+                  iconSize: 26,
+                  color: Colors.white.withValues(alpha: 0.85),
+                  onPressed: onSearchTap,
                   style: IconButton.styleFrom(
                     backgroundColor: Colors.transparent,
                     padding: const EdgeInsets.all(8),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 4),
                 IconButton(
-                  icon: const Icon(LucideIcons.settings),
-                  iconSize: 28,
+                  icon: const Icon(LucideIcons.bell),
+                  iconSize: 25,
                   color: Colors.white.withValues(alpha: 0.8),
-                  onPressed: () {},
+                  onPressed: onSearchTap,
                   style: IconButton.styleFrom(
                     backgroundColor: Colors.transparent,
                     padding: const EdgeInsets.all(8),
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 4),
               ],
-
-              // User Avatar
-              Stack(
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      image: const DecorationImage(
-                        image: AssetImage('assets/images/mmc2.jpg'),
-                        fit: BoxFit.cover,
-                      ),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        width: 2,
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      width: 12,
-                      height: 12,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF10B981),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.black,
-                          width: 2,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+              IconButton(
+                icon: const Icon(LucideIcons.settings),
+                iconSize: 28,
+                color: Colors.white.withValues(alpha: 0.8),
+                onPressed: onSettingsTap,
+                style: IconButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  padding: const EdgeInsets.all(8),
+                ),
               ),
-
-              const SizedBox(width: 16),
-
-              // Time
+              if (!isMobile) ...[
+                const SizedBox(width: 10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      profileName,
+                      style: const TextStyle(
+                        color: AppColors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const Text(
+                      'Level 42 Fullstack Builder',
+                      style: TextStyle(
+                        color: AppColors.white60,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w300,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 10),
+              ],
+              _ProfileAvatar(onTap: onProfileTap),
+              const SizedBox(width: 14),
               Obx(
                 () => Text(
                   currentTime.value,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: isMobile ? 16 : 24,
-                    fontWeight: FontWeight.w300,
-                    fontFeatures: const [FontFeature.tabularFigures()],
-                  ),
+                  style: AppTextStyles.dashboardTime(isMobile: isMobile),
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfileAvatar extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _ProfileAvatar({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Stack(
+        children: [
+          SizedBox(
+            width: 40,
+            height: 40,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                image: const DecorationImage(
+                  image: AssetImage('assets/images/mmc2.jpg'),
+                  fit: BoxFit.cover,
+                ),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  width: 2,
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 0,
+            right: 0,
+            child: SizedBox(
+              width: 12,
+              height: 12,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: AppColors.onlineGreen,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.black,
+                    width: 2,
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
       ),
@@ -164,19 +215,10 @@ class _TabButtonState extends State<_TabButton> {
         onTap: widget.onTap,
         child: AnimatedDefaultTextStyle(
           duration: const Duration(milliseconds: 300),
-          style: TextStyle(
-            color: widget.isActive ? Colors.white : (_isHovered ? Colors.white.withValues(alpha: 0.8) : Colors.white.withValues(alpha: 0.5)),
-            fontSize: widget.isMobile ? 20 : 28, // Responsive font size
-            fontWeight: FontWeight.w500,
-            letterSpacing: -0.5,
-            shadows: widget.isActive
-                ? [
-                    const Shadow(
-                      color: Colors.white,
-                      blurRadius: 10,
-                    ),
-                  ]
-                : [],
+          style: AppTextStyles.dashboardTabLabel(
+            isActive: widget.isActive,
+            isHovered: _isHovered,
+            isMobile: widget.isMobile,
           ),
           child: AnimatedScale(
             duration: const Duration(milliseconds: 300),

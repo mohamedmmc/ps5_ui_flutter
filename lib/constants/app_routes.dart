@@ -3,9 +3,13 @@ class AppRoutes {
   static const String intro = '/';
   static const String userSelect = '/user-select';
   static const String dashboard = '/dashboard';
+  static const String gameDetails = '/dashboard/game/:gameId';
 
   // Route names
   static const String introName = 'intro';
   static const String userSelectName = 'user-select';
   static const String dashboardName = 'dashboard';
+  static const String gameDetailsName = 'game-details';
+
+  static String gameDetailsFor(String gameId) => '/dashboard/game/$gameId';
 }

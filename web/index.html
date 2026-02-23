@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <!--
+  <head>
+    <!--
     If you are serving your web app in a path other than the root, change the
     href value below to reflect the base path you are serving from.
 
@@ -14,39 +14,335 @@
     This is a placeholder for base href that will be replaced by the value of
     the `--base-href` argument provided to `flutter build`.
   -->
-  <base href="$FLUTTER_BASE_HREF">
+    <base href="$FLUTTER_BASE_HREF" />
 
-  <meta charset="UTF-8">
-  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+    <meta charset="UTF-8" />
+    <meta content="IE=Edge" http-equiv="X-UA-Compatible" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
 
-  <!-- iOS meta tags & icons -->
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="ps5_ui_flutter">
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+    <title>MMC Portfolio — PS5 UI</title>
+    <meta
+      name="description"
+      content="A PS5-inspired portfolio experience built with Flutter — smooth UI, games/media dashboard, and ambient particles."
+    />
+    <meta name="author" content="Mohamed MMC" />
+    <meta name="theme-color" content="#0A1129" />
+    <link rel="canonical" href="https://mohamedmmc.github.io/" />
 
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
+    <!-- Open Graph / Twitter (SEO) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="MMC Portfolio" />
+    <meta property="og:title" content="MMC Portfolio — PS5 UI" />
+    <meta
+      property="og:description"
+      content="A PS5-inspired portfolio experience built with Flutter — smooth UI, games/media dashboard, and ambient particles."
+    />
+    <meta property="og:url" content="https://mohamedmmc.github.io/" />
+    <meta
+      property="og:image"
+      content="https://mohamedmmc.github.io/assets/assets/images/mmc2.jpg"
+    />
+    <meta
+      property="og:image:alt"
+      content="MMC profile image used as social preview."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="MMC Portfolio — PS5 UI" />
+    <meta
+      name="twitter:description"
+      content="A PS5-inspired portfolio experience built with Flutter — smooth UI, games/media dashboard, and ambient particles."
+    />
+    <meta
+      name="twitter:image"
+      content="https://mohamedmmc.github.io/assets/assets/images/mmc2.jpg"
+    />
 
-  <title>ps5_ui_flutter</title>
-  <link rel="manifest" href="manifest.json">
-</head>
-<body>
-  <script>
-    // Support GitHub Pages deep links (see web/404.html).
-    (function (l) {
-      var params = new URLSearchParams(l.search);
-      var p = params.get('p');
-      if (!p) return;
+    <!-- iOS meta tags & icons -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-title" content="MMC Portfolio" />
+    <link rel="apple-touch-icon" href="icons/Icon-192.png" />
 
-      var decodedPath = decodeURIComponent(p);
-      var q = params.get('q');
-      var search = q ? '?' + q : '';
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="favicon.png" />
 
-      window.history.replaceState(null, null, decodedPath + search + l.hash);
-    })(window.location);
-  </script>
-  <script src="flutter_bootstrap.js" async></script>
-</body>
+    <link rel="manifest" href="manifest.json" />
+
+    <!-- Preload loader assets -->
+    <link
+      rel="preload"
+      as="image"
+      href="assets/assets/images/website/pslogo.png"
+    />
+    <link rel="preload" as="image" href="assets/assets/images/mmc2.jpg" />
+
+    <style>
+      :root {
+        --bg: #0a1129; /* IntroVisualConstants.backgroundColor (rgb(10,17,41)) */
+        --gold: #ffd764;
+        --blue: #3b82f6;
+        --white: #ffffff;
+      }
+
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        background: var(--bg);
+        overflow: hidden;
+      }
+
+      #ps5-loader {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: grid;
+        place-items: center;
+        color: rgba(255, 255, 255, 0.9);
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica,
+          Arial, sans-serif;
+        user-select: none;
+        -webkit-user-select: none;
+        background: radial-gradient(
+            900px 600px at 12% -10%,
+            rgba(255, 215, 100, 0.18),
+            rgba(255, 215, 100, 0) 60%
+          ),
+          radial-gradient(
+            900px 900px at 88% 20%,
+            rgba(59, 130, 246, 0.14),
+            rgba(59, 130, 246, 0) 60%
+          ),
+          linear-gradient(180deg, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.65));
+      }
+
+      #ps5-loader::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          115deg,
+          rgba(255, 255, 255, 0) 0%,
+          rgba(255, 255, 255, 0.06) 12%,
+          rgba(255, 215, 100, 0.05) 22%,
+          rgba(255, 255, 255, 0.02) 34%,
+          rgba(255, 255, 255, 0) 50%,
+          rgba(255, 255, 255, 0.02) 64%,
+          rgba(59, 130, 246, 0.06) 78%,
+          rgba(255, 255, 255, 0) 100%
+        );
+        opacity: 0.8;
+        transform: translateX(-35%) rotate(-8deg);
+        animation: ps5Beams 6.5s ease-in-out infinite;
+      }
+
+      #ps5-loader .content {
+        position: relative;
+        width: min(520px, 92vw);
+        padding: 28px 22px;
+        display: grid;
+        gap: 14px;
+        justify-items: center;
+        text-align: center;
+      }
+
+      .logo-wrap {
+        position: relative;
+        width: 160px;
+        height: 160px;
+        display: grid;
+        place-items: center;
+      }
+
+      .ring {
+        position: absolute;
+        inset: 0;
+        border-radius: 999px;
+        border: 3px solid rgba(255, 255, 255, 0.14);
+        box-shadow: 0 0 28px rgba(255, 255, 255, 0.08);
+        transform: scale(0.68);
+        opacity: 0;
+        animation: ps5Pulse 2.8s ease-out infinite;
+      }
+
+      .ring.r2 {
+        animation-delay: 0.42s;
+        border-color: rgba(255, 215, 100, 0.12);
+        box-shadow: 0 0 36px rgba(255, 215, 100, 0.09);
+      }
+
+      .ring.r3 {
+        animation-delay: 0.84s;
+        border-color: rgba(59, 130, 246, 0.12);
+        box-shadow: 0 0 36px rgba(59, 130, 246, 0.09);
+      }
+
+      .ps-logo {
+        width: 96px;
+        height: 96px;
+        filter: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.55))
+          drop-shadow(0 0 18px rgba(255, 255, 255, 0.18));
+      }
+
+      .title {
+        font-size: 22px;
+        font-weight: 600;
+        letter-spacing: -0.4px;
+      }
+
+      .subtitle {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.68);
+        line-height: 1.45;
+      }
+
+      .bar {
+        width: min(360px, 78vw);
+        height: 4px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.12);
+        overflow: hidden;
+      }
+
+      .bar > span {
+        display: block;
+        height: 100%;
+        width: 50%;
+        border-radius: 999px;
+        background: linear-gradient(
+          90deg,
+          rgba(255, 215, 100, 0) 0%,
+          rgba(255, 215, 100, 0.9) 28%,
+          rgba(255, 255, 255, 0.9) 52%,
+          rgba(59, 130, 246, 0.9) 78%,
+          rgba(59, 130, 246, 0) 100%
+        );
+        transform: translateX(-120%);
+        animation: ps5Bar 1.35s ease-in-out infinite;
+      }
+
+      #ps5-loader.fade-out {
+        animation: ps5FadeOut 380ms ease-out forwards;
+      }
+
+      @keyframes ps5Pulse {
+        0% {
+          transform: scale(0.68);
+          opacity: 0;
+        }
+        12% {
+          opacity: 0.9;
+        }
+        100% {
+          transform: scale(1.62);
+          opacity: 0;
+        }
+      }
+
+      @keyframes ps5Beams {
+        0%,
+        100% {
+          transform: translateX(-35%) rotate(-8deg);
+          opacity: 0.65;
+        }
+        50% {
+          transform: translateX(-10%) rotate(-4deg);
+          opacity: 0.85;
+        }
+      }
+
+      @keyframes ps5Bar {
+        0% {
+          transform: translateX(-120%);
+          opacity: 0.9;
+        }
+        55% {
+          opacity: 1;
+        }
+        100% {
+          transform: translateX(220%);
+          opacity: 0.9;
+        }
+      }
+
+      @keyframes ps5FadeOut {
+        to {
+          opacity: 0;
+          visibility: hidden;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        #ps5-loader::before,
+        .ring,
+        .bar > span {
+          animation: none !important;
+        }
+      }
+    </style>
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "MMC Portfolio",
+        "url": "https://mohamedmmc.github.io/",
+        "description": "A PS5-inspired portfolio experience built with Flutter."
+      }
+    </script>
+  </head>
+  <body>
+    <script>
+      // Support GitHub Pages deep links (see web/404.html).
+      (function (l) {
+        var params = new URLSearchParams(l.search);
+        var p = params.get("p");
+        if (!p) return;
+
+        var decodedPath = decodeURIComponent(p);
+        var q = params.get("q");
+        var search = q ? "?" + q : "";
+
+        window.history.replaceState(null, null, decodedPath + search + l.hash);
+      })(window.location);
+    </script>
+
+    <div id="ps5-loader" role="status" aria-live="polite" aria-label="Loading">
+      <div class="content">
+        <div class="logo-wrap" aria-hidden="true">
+          <span class="ring r1"></span>
+          <span class="ring r2"></span>
+          <span class="ring r3"></span>
+          <img
+            class="ps-logo"
+            src="assets/assets/images/website/pslogo.png"
+            alt=""
+          />
+        </div>
+        <div class="title">MMC Portfolio</div>
+        <div class="subtitle">Booting the PS5-style experience…</div>
+        <div class="bar" aria-hidden="true"><span></span></div>
+        <noscript>
+          <div class="subtitle">JavaScript is required to run this app.</div>
+        </noscript>
+      </div>
+    </div>
+
+    <script>
+      // Remove loader after Flutter renders its first frame.
+      window.addEventListener("flutter-first-frame", function () {
+        var loader = document.getElementById("ps5-loader");
+        if (!loader) return;
+        loader.classList.add("fade-out");
+        window.setTimeout(function () {
+          loader.remove();
+        }, 420);
+      });
+    </script>
+
+    <script src="flutter_bootstrap.js" async></script>
+  </body>
 </html>

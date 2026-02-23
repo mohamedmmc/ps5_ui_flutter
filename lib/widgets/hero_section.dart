@@ -1,17 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_text_styles.dart';
 import '../models/game.dart';
 import '../utils/responsive.dart';
 
 class HeroSection extends StatelessWidget {
   final Game game;
   final List<FeaturedMedia>? featuredMedia;
+  final VoidCallback? onPrimaryAction;
+  final String? primaryActionLabel;
 
   const HeroSection({
     super.key,
     required this.game,
     this.featuredMedia,
+    this.onPrimaryAction,
+    this.primaryActionLabel,
   });
 
   @override
@@ -24,8 +30,7 @@ class HeroSection extends StatelessWidget {
       bottom: 0,
       left: 0,
       right: 0,
-      child: Container(
-        height: MediaQuery.of(context).size.height * (isMobile ? 0.7 : 0.6),
+      child: DecoratedBox(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
@@ -38,55 +43,61 @@ class HeroSection extends StatelessWidget {
             stops: const [0.0, 0.5, 1.0],
           ),
         ),
-        child: Padding(
-          padding: EdgeInsets.only(
-            left: horizontalPadding,
-            right: horizontalPadding,
-            bottom: bottomPadding,
-          ),
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 520),
-            reverseDuration: const Duration(milliseconds: 420),
-            switchInCurve: Curves.easeInOutCubic,
-            switchOutCurve: Curves.easeInOutCubic,
-            layoutBuilder: (currentChild, previousChildren) {
-              return Stack(
-                alignment: Alignment.bottomLeft,
-                children: [
-                  ...previousChildren,
-                  if (currentChild != null) currentChild,
-                ],
-              );
-            },
-            transitionBuilder: (child, animation) {
-              // Simplified transition for better performance (removed Scale and Slide)
-              return FadeTransition(
-                opacity: CurvedAnimation(
-                  parent: animation,
-                  curve: Curves.easeInOutCubic,
-                  reverseCurve: Curves.easeInOutCubic,
-                ),
-                child: child,
-              );
-            },
-            child: KeyedSubtree(
-              key: ValueKey(game.id),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  return SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                      child: Align(
-                        alignment: Alignment.bottomLeft,
-                        child: _HeroContent(
-                          game: game,
-                          featuredMedia: featuredMedia,
+        child: SizedBox(
+          height: MediaQuery.of(context).size.height * (isMobile ? 0.7 : 0.6),
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: horizontalPadding,
+              right: horizontalPadding,
+              bottom: bottomPadding,
+            ),
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 520),
+              reverseDuration: const Duration(milliseconds: 420),
+              switchInCurve: Curves.easeInCubic,
+              switchOutCurve: Curves.easeOutCubic,
+              layoutBuilder: (currentChild, previousChildren) {
+                return Stack(
+                  alignment: Alignment.bottomLeft,
+                  children: [
+                    ...previousChildren,
+                    if (currentChild != null) currentChild,
+                  ],
+                );
+              },
+              transitionBuilder: (child, animation) {
+                // Simplified transition for better performance (removed Scale and Slide)
+                return FadeTransition(
+                  opacity: CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeInCubic,
+                    reverseCurve: Curves.easeOutCubic,
+                  ),
+                  child: child,
+                );
+              },
+              child: KeyedSubtree(
+                key: ValueKey(game.id),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      child: ConstrainedBox(
+                        constraints:
+                            BoxConstraints(minHeight: constraints.maxHeight),
+                        child: Align(
+                          alignment: Alignment.bottomLeft,
+                          child: _HeroContent(
+                            game: game,
+                            featuredMedia: featuredMedia,
+                            onPrimaryAction: onPrimaryAction,
+                            primaryActionLabel: primaryActionLabel,
+                          ),
                         ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
             ),
           ),
@@ -99,15 +110,21 @@ class HeroSection extends StatelessWidget {
 class _HeroContent extends StatelessWidget {
   final Game game;
   final List<FeaturedMedia>? featuredMedia;
+  final VoidCallback? onPrimaryAction;
+  final String? primaryActionLabel;
 
   const _HeroContent({
     required this.game,
     required this.featuredMedia,
+    required this.onPrimaryAction,
+    required this.primaryActionLabel,
   });
 
   @override
   Widget build(BuildContext context) {
     final isMobile = Responsive.isMobile(context);
+    final circleSize = isMobile ? 44.0 : 48.0;
+    final circleIconSize = isMobile ? 18.0 : 20.0;
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.end,
@@ -118,89 +135,136 @@ class _HeroContent extends StatelessWidget {
         else
           Text(
             game.title,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: isMobile ? 32 : 48,
-              fontWeight: FontWeight.bold,
-              shadows: const [
-                Shadow(
-                  offset: Offset(0, 2),
-                  blurRadius: 10,
-                  color: Colors.black87,
-                ),
-              ],
-            ),
+            style: AppTextStyles.heroTitle(isMobile: isMobile),
           ),
         SizedBox(height: isMobile ? 12 : 16),
-        Container(
-          constraints: BoxConstraints(maxWidth: isMobile ? double.infinity : 700),
+        ConstrainedBox(
+          constraints:
+              BoxConstraints(maxWidth: isMobile ? double.infinity : 700),
           child: Text(
             game.description,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.9),
-              fontSize: isMobile ? 14 : 20,
-              fontWeight: FontWeight.normal,
-              height: 1.5,
-              shadows: const [
-                Shadow(
-                  offset: Offset(0, 1),
-                  blurRadius: 5,
-                  color: Colors.black54,
-                ),
-              ],
-            ),
+            style: AppTextStyles.heroDescription(isMobile: isMobile),
             maxLines: isMobile ? 2 : 3,
             overflow: TextOverflow.ellipsis,
           ),
         ),
         SizedBox(height: isMobile ? 16 : 24),
-        Row(
-          children: [
-            ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white.withValues(alpha: 0.95),
-                foregroundColor: Colors.black,
-                padding: EdgeInsets.symmetric(
-                  horizontal: isMobile ? 24 : 48,
-                  vertical: isMobile ? 12 : 16,
+        if (isMobile)
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              ElevatedButton(
+                onPressed: onPrimaryAction,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white.withValues(alpha: 0.95),
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  elevation: 0,
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(isMobile ? 20 : 24),
+                child: Text(
+                  primaryActionLabel ??
+                      (game.type == ContentType.game
+                          ? 'Play Game'
+                          : 'Open App'),
+                  style: AppTextStyles.heroPrimaryButton(isMobile: true),
                 ),
-                elevation: 0,
               ),
-              child: Text(
-                game.type == ContentType.game ? 'Play Game' : 'Open App',
-                style: TextStyle(
-                  fontSize: isMobile ? 14 : 18,
-                  fontWeight: FontWeight.bold,
+              _CircleButton(
+                icon: LucideIcons.messageSquare,
+                size: circleSize,
+                iconSize: circleIconSize,
+                onTap: () {},
+              ),
+              _CircleButton(
+                icon: Icons.more_horiz,
+                size: circleSize,
+                iconSize: circleIconSize,
+                onTap: () {},
+              ),
+            ],
+          )
+        else
+          Row(
+            children: [
+              ElevatedButton(
+                onPressed: onPrimaryAction,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white.withValues(alpha: 0.95),
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 48,
+                    vertical: 16,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  elevation: 0,
+                ),
+                child: Text(
+                  primaryActionLabel ??
+                      (game.type == ContentType.game
+                          ? 'Play Game'
+                          : 'Open App'),
+                  style: AppTextStyles.heroPrimaryButton(isMobile: false),
                 ),
               ),
-            ),
-            const SizedBox(width: 16),
-            _CircleButton(
-              icon: LucideIcons.messageSquare,
-              onTap: () {},
-            ),
-            const SizedBox(width: 16),
-            _CircleButton(
-              icon: Icons.more_horiz,
-              onTap: () {},
-            ),
-          ],
-        ),
+              const SizedBox(width: 16),
+              _CircleButton(
+                icon: LucideIcons.messageSquare,
+                size: circleSize,
+                iconSize: circleIconSize,
+                onTap: () {},
+              ),
+              const SizedBox(width: 16),
+              _CircleButton(
+                icon: Icons.more_horiz,
+                size: circleSize,
+                iconSize: circleIconSize,
+                onTap: () {},
+              ),
+            ],
+          ),
         const SizedBox(height: 32),
         if (game.progress != null || game.news != null)
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              if (game.news != null) ...[
-                _NewsCard(news: game.news!),
-                const SizedBox(width: 32),
-              ],
-              if (game.progress != null) _ProgressCard(game: game),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final cardWidth = constraints.maxWidth;
+              if (isMobile) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (game.news != null)
+                      _NewsCard(
+                          news: game.news!, width: cardWidth, isMobile: true),
+                    if (game.news != null && game.progress != null)
+                      const SizedBox(height: 12),
+                    if (game.progress != null)
+                      _ProgressCard(
+                          game: game, width: cardWidth, isMobile: true),
+                  ],
+                );
+              }
+
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  if (game.news != null) ...[
+                    _NewsCard(news: game.news!, width: 300, isMobile: false),
+                    const SizedBox(width: 32),
+                  ],
+                  if (game.progress != null)
+                    _ProgressCard(game: game, isMobile: false),
+                ],
+              );
+            },
           ),
         if (game.type == ContentType.media && featuredMedia != null) ...[
           const SizedBox(height: 32),
@@ -217,12 +281,14 @@ class _GameLogo extends StatelessWidget {
 
   const _GameLogo({required this.logo, this.isMobile = false});
 
-  bool get _isImageUrl => logo.startsWith('http') || logo.startsWith('data:') || logo.endsWith('.png');
+  bool get _isImageUrl =>
+      logo.startsWith('http') ||
+      logo.startsWith('data:') ||
+      logo.endsWith('.png');
 
   @override
   Widget build(BuildContext context) {
     final logoHeight = isMobile ? 100.0 : 160.0;
-    final textSize = isMobile ? 40.0 : 60.0;
 
     if (_isImageUrl) {
       return SizedBox(
@@ -233,7 +299,8 @@ class _GameLogo extends StatelessWidget {
                 height: logoHeight,
                 fit: BoxFit.contain,
                 alignment: Alignment.centerLeft,
-                memCacheHeight: (logoHeight * 2).toInt(), // Optimize logo cache (2x for hi-dpi)
+                memCacheHeight: (logoHeight * 2)
+                    .toInt(), // Optimize logo cache (2x for hi-dpi)
                 maxHeightDiskCache: (logoHeight * 2).toInt(),
               )
             : Image.asset(
@@ -246,19 +313,7 @@ class _GameLogo extends StatelessWidget {
     } else {
       return Text(
         logo,
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: textSize,
-          fontWeight: FontWeight.w900,
-          letterSpacing: -1,
-          shadows: const [
-            Shadow(
-              offset: Offset(0, 4),
-              blurRadius: 20,
-              color: Colors.black87,
-            ),
-          ],
-        ),
+        style: AppTextStyles.heroLogoText(isMobile: isMobile),
       );
     }
   }
@@ -266,10 +321,14 @@ class _GameLogo extends StatelessWidget {
 
 class _CircleButton extends StatefulWidget {
   final IconData icon;
+  final double size;
+  final double iconSize;
   final VoidCallback onTap;
 
   const _CircleButton({
     required this.icon,
+    this.size = 48,
+    this.iconSize = 20,
     required this.onTap,
   });
 
@@ -289,11 +348,13 @@ class _CircleButtonState extends State<_CircleButton> {
         onTap: widget.onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          width: 48,
-          height: 48,
+          width: widget.size,
+          height: widget.size,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: _isHovered ? Colors.white.withValues(alpha: 0.2) : Colors.white.withValues(alpha: 0.1),
+            color: _isHovered
+                ? Colors.white.withValues(alpha: 0.2)
+                : Colors.white.withValues(alpha: 0.1),
             border: Border.all(
               color: Colors.white.withValues(alpha: 0.1),
               width: 1,
@@ -302,7 +363,7 @@ class _CircleButtonState extends State<_CircleButton> {
           child: Icon(
             widget.icon,
             color: Colors.white,
-            size: 20,
+            size: widget.iconSize,
           ),
         ),
       ),
@@ -312,8 +373,14 @@ class _CircleButtonState extends State<_CircleButton> {
 
 class _NewsCard extends StatefulWidget {
   final NewsItem news;
+  final double width;
+  final bool isMobile;
 
-  const _NewsCard({required this.news});
+  const _NewsCard({
+    required this.news,
+    required this.width,
+    required this.isMobile,
+  });
 
   @override
   State<_NewsCard> createState() => _NewsCardState();
@@ -330,76 +397,65 @@ class _NewsCardState extends State<_NewsCard> {
       child: AnimatedScale(
         duration: const Duration(milliseconds: 200),
         scale: _isHovered ? 1.05 : 1.0,
-        child: Container(
-          width: 300,
-          height: 160,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                const Color(0xFF27272A).withValues(alpha: 0.8),
-                const Color(0xFF18181B).withValues(alpha: 0.8),
-              ],
+        child: SizedBox(
+          width: widget.width,
+          height: widget.isMobile ? 150 : 160,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppColors.darkGray.withValues(alpha: 0.8),
+                  AppColors.darkerGray.withValues(alpha: 0.8),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.05),
+                width: 1,
+              ),
             ),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.05),
-              width: 1,
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'OFFICIAL NEWS',
-                    style: TextStyle(
-                      color: _isHovered ? Colors.white.withValues(alpha: 0.8) : Colors.white.withValues(alpha: 0.6),
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.5,
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'OFFICIAL NEWS',
+                        style: AppTextStyles.newsLabel(isHovered: _isHovered),
+                      ),
+                      Text(
+                        widget.news.date,
+                        style: AppTextStyles.newsDate,
+                      ),
+                    ],
                   ),
-                  Text(
-                    widget.news.date,
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.4),
-                      fontSize: 10,
-                    ),
-                  ),
-                ],
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.news.title,
-                    style: TextStyle(
-                      color: _isHovered ? const Color(0xFF60A5FA) : Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    widget.news.description,
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.6),
-                      fontSize: 12,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.news.title,
+                        style: AppTextStyles.newsTitle(isHovered: _isHovered),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        widget.news.description,
+                        style: AppTextStyles.newsDescription,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -409,13 +465,18 @@ class _NewsCardState extends State<_NewsCard> {
 
 class _ProgressCard extends StatelessWidget {
   final Game game;
+  final double? width;
+  final bool isMobile;
 
-  const _ProgressCard({required this.game});
+  const _ProgressCard({
+    required this.game,
+    this.width,
+    required this.isMobile,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(24),
+    final child = DecoratedBox(
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
@@ -424,91 +485,108 @@ class _ProgressCard extends StatelessWidget {
           width: 1,
         ),
       ),
-      constraints: const BoxConstraints(minWidth: 320),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'PROGRESS',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.6),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  Text(
-                    '${game.progress}%',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              if (game.earned != null)
+      child: Padding(
+        padding: EdgeInsets.all(isMobile ? 16 : 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
                 Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'EARNED',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.6),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      'PROGRESS',
+                      style: AppTextStyles.progressLabel,
                     ),
                     Text(
-                      game.earned!,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      '${game.progress}%',
+                      style: AppTextStyles.progressValue,
                     ),
                   ],
                 ),
-            ],
-          ),
-          if (game.trophies != null) ...[
-            const SizedBox(height: 12),
-            Container(
-              height: 1,
-              color: Colors.white.withValues(alpha: 0.1),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                _TrophyCount(
-                  count: game.trophies!.platinum,
-                  color: const Color(0xFFE5E7EB),
-                ),
-                const SizedBox(width: 16),
-                _TrophyCount(
-                  count: game.trophies!.gold,
-                  color: const Color(0xFFFBBF24),
-                ),
-                const SizedBox(width: 16),
-                _TrophyCount(
-                  count: game.trophies!.silver,
-                  color: const Color(0xFF9CA3AF),
-                ),
-                const SizedBox(width: 16),
-                _TrophyCount(
-                  count: game.trophies!.bronze,
-                  color: const Color(0xFFB45309),
-                ),
+                if (game.earned != null)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        'EARNED',
+                        style: AppTextStyles.progressLabel,
+                      ),
+                      Text(
+                        game.earned!,
+                        style: AppTextStyles.earnedValue,
+                      ),
+                    ],
+                  ),
               ],
             ),
+            if (game.trophies != null) ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 1,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.1),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              if (isMobile)
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 8,
+                  children: [
+                    _TrophyCount(
+                        count: game.trophies!.platinum,
+                        color: AppColors.trophyPlatinum),
+                    _TrophyCount(
+                        count: game.trophies!.gold,
+                        color: AppColors.trophyGold),
+                    _TrophyCount(
+                        count: game.trophies!.silver,
+                        color: AppColors.trophySilver),
+                    _TrophyCount(
+                        count: game.trophies!.bronze,
+                        color: AppColors.trophyBronze),
+                  ],
+                )
+              else
+                Row(
+                  children: [
+                    _TrophyCount(
+                        count: game.trophies!.platinum,
+                        color: AppColors.trophyPlatinum),
+                    const SizedBox(width: 16),
+                    _TrophyCount(
+                        count: game.trophies!.gold,
+                        color: AppColors.trophyGold),
+                    const SizedBox(width: 16),
+                    _TrophyCount(
+                        count: game.trophies!.silver,
+                        color: AppColors.trophySilver),
+                    const SizedBox(width: 16),
+                    _TrophyCount(
+                        count: game.trophies!.bronze,
+                        color: AppColors.trophyBronze),
+                  ],
+                ),
+            ],
           ],
-        ],
+        ),
       ),
+    );
+
+    if (width != null) {
+      return SizedBox(width: width, child: child);
+    }
+    if (isMobile) {
+      return child;
+    }
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 320),
+      child: child,
     );
   }
 }
@@ -534,11 +612,7 @@ class _TrophyCount extends StatelessWidget {
         const SizedBox(width: 4),
         Text(
           count.toString(),
-          style: TextStyle(
-            color: color,
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-          ),
+          style: AppTextStyles.trophyCount(color),
         ),
       ],
     );
@@ -552,20 +626,20 @@ class _FeaturedMediaSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = Responsive.isMobile(context);
+    final cardWidth = isMobile ? 220.0 : 280.0;
+    final cardHeight = isMobile ? 124.0 : 157.0;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Featured',
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.8),
-            fontSize: 18,
-            fontWeight: FontWeight.w300,
-          ),
+          style: AppTextStyles.featuredHeader,
         ),
         const SizedBox(height: 16),
         SizedBox(
-          height: 157,
+          height: cardHeight,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             itemCount: featuredMedia.length,
@@ -573,7 +647,11 @@ class _FeaturedMediaSection extends StatelessWidget {
               final media = featuredMedia[index];
               return Padding(
                 padding: const EdgeInsets.only(right: 16),
-                child: _FeaturedMediaCard(media: media),
+                child: _FeaturedMediaCard(
+                  media: media,
+                  width: cardWidth,
+                  height: cardHeight,
+                ),
               );
             },
           ),
@@ -585,8 +663,14 @@ class _FeaturedMediaSection extends StatelessWidget {
 
 class _FeaturedMediaCard extends StatefulWidget {
   final FeaturedMedia media;
+  final double width;
+  final double height;
 
-  const _FeaturedMediaCard({required this.media});
+  const _FeaturedMediaCard({
+    required this.media,
+    required this.width,
+    required this.height,
+  });
 
   @override
   State<_FeaturedMediaCard> createState() => _FeaturedMediaCardState();
@@ -603,79 +687,83 @@ class _FeaturedMediaCardState extends State<_FeaturedMediaCard> {
       child: AnimatedScale(
         duration: const Duration(milliseconds: 200),
         scale: _isHovered ? 1.05 : 1.0,
-        child: Container(
-          width: 280,
-          height: 157,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.3),
-                blurRadius: 10,
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Stack(
-              children: [
-                CachedNetworkImage(
-                  imageUrl: widget.media.imageUrl,
-                  width: 280,
-                  height: 157,
-                  fit: BoxFit.cover,
-                  memCacheWidth: 560, // Optimize featured media cache (2x for hi-dpi)
-                  memCacheHeight: 314,
-                  maxWidthDiskCache: 560,
-                  maxHeightDiskCache: 314,
+        child: SizedBox(
+          width: widget.width,
+          height: widget.height,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.3),
+                  blurRadius: 10,
                 ),
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  color: _isHovered ? Colors.transparent : Colors.black.withValues(alpha: 0.2),
-                ),
-                Positioned(
-                  bottom: 12,
-                  left: 12,
-                  child: Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.6),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: CachedNetworkImage(
-                      imageUrl: widget.media.serviceLogo,
-                      height: 16,
-                      color: Colors.white,
-                      memCacheHeight: 32, // Optimize service logo cache
-                      maxHeightDiskCache: 32,
-                    ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Stack(
+                children: [
+                  CachedNetworkImage(
+                    imageUrl: widget.media.imageUrl,
+                    width: widget.width,
+                    height: widget.height,
+                    fit: BoxFit.cover,
+                    memCacheWidth:
+                        560, // Optimize featured media cache (2x for hi-dpi)
+                    memCacheHeight: 314,
+                    maxWidthDiskCache: 560,
+                    maxHeightDiskCache: 314,
                   ),
-                ),
-                if (_isHovered)
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    color: _isHovered
+                        ? Colors.transparent
+                        : Colors.black.withValues(alpha: 0.2),
+                  ),
                   Positioned(
                     bottom: 12,
-                    right: 12,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
+                    left: 12,
+                    child: DecoratedBox(
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(2),
+                        color: Colors.black.withValues(alpha: 0.6),
+                        borderRadius: BorderRadius.circular(4),
                       ),
-                      child: const Text(
-                        'WATCH',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1,
+                      child: Padding(
+                        padding: const EdgeInsets.all(6),
+                        child: CachedNetworkImage(
+                          imageUrl: widget.media.serviceLogo,
+                          height: 16,
+                          color: Colors.white,
+                          memCacheHeight: 32, // Optimize service logo cache
+                          maxHeightDiskCache: 32,
                         ),
                       ),
                     ),
                   ),
-              ],
+                  if (_isHovered)
+                    Positioned(
+                      bottom: 12,
+                      right: 12,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          child: const Text(
+                            'WATCH',
+                            style: AppTextStyles.featuredWatch,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
         ),

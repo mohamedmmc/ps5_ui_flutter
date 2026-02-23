@@ -14,15 +14,10 @@ class LightBeamWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: lightBeamController,
-      builder: (context, child) {
-        return CustomPaint(
-          painter: LightBeamPainter(
-            animationValue: lightBeamController.value,
-          ),
-        );
-      },
+    return CustomPaint(
+      painter: LightBeamPainter(animation: lightBeamController),
+      isComplex: true,
+      willChange: true,
     );
   }
 }

@@ -5,11 +5,13 @@ import 'package:go_router/go_router.dart';
 import 'screens/intro/intro_screen.dart';
 import 'screens/user_select/user_select_screen.dart';
 import 'screens/dashboard/dashboard_screen.dart';
+import 'screens/dashboard/games/game_details_screen.dart';
 import 'widgets/ambient_background_shell.dart';
 import 'utils/url_strategy.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  GoRouter.optionURLReflectsImperativeAPIs = true;
 
   // Set fullscreen mode and hide system UI
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
@@ -82,6 +84,22 @@ final GoRouter _router = GoRouter(
               child: child,
             ),
           );
+        },
+      ),
+    ),
+    GoRoute(
+      path: GameDetailsScreen.routePath,
+      name: GameDetailsScreen.routeName,
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        transitionDuration: const Duration(milliseconds: 620),
+        reverseTransitionDuration: const Duration(milliseconds: 420),
+        child: GameDetailsScreen(
+          gameId: state.pathParameters['gameId'] ?? '',
+        ),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          // Keep route transition visually neutral while preserving Hero flight timing.
+          return child;
         },
       ),
     ),

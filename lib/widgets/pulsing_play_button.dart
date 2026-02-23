@@ -125,22 +125,24 @@ class _PulseRing extends StatelessWidget {
 
     return Transform.scale(
       scale: scale,
-      child: Container(
+      child: SizedBox(
         width: size,
         height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: color.withValues(alpha: (0.75 * intensity) * opacity),
-            width: strokeWidth,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: (0.28 * intensity) * opacity),
-              blurRadius: 34,
-              spreadRadius: 4,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: color.withValues(alpha: (0.75 * intensity) * opacity),
+              width: strokeWidth,
             ),
-          ],
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: (0.28 * intensity) * opacity),
+                blurRadius: 34,
+                spreadRadius: 4,
+              ),
+            ],
+          ),
         ),
       ),
     );

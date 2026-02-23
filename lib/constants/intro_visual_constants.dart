@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'app_colors.dart';
 
 /// Visual configuration constants for the intro screen
 ///
@@ -35,11 +36,11 @@ class IntroVisualConstants {
 
   // Particle Colors
   static const List<Color> particleColors = [
-    Color(0xFFFFD764), // Golden
-    Color(0xFFFFA834), // Orange
-    Color(0xFFFFE8B4), // Light gold
-    Color(0xFFD4A574), // Brown-gold
-    Color(0xFFFFFFFF), // White
+    AppColors.golden,
+    AppColors.orange,
+    AppColors.lightGold,
+    AppColors.brownGold,
+    AppColors.white,
   ];
 
   // Light Beam - Source Position
@@ -64,9 +65,9 @@ class IntroVisualConstants {
   static const double sourceGlowHighOpacity = 0.9;
   static const double sourceGlowMediumOpacity = 0.6;
   static const double sourceGlowLowOpacity = 0.2;
-  static const Color sourceGlowPrimaryColor = Color(0xFFFFFFFF);
+  static const Color sourceGlowPrimaryColor = AppColors.white;
   static const Color sourceGlowSecondaryColor = Color(0xFFF5F5F5);
-  static const Color sourceGlowTertiaryColor = Color(0xFFFFD764);
+  static const Color sourceGlowTertiaryColor = AppColors.golden;
 
   // Light Beam - Expansion
   static const double lightBeamExpansionWidth = 0.8;
@@ -76,8 +77,8 @@ class IntroVisualConstants {
   static const double backgroundGlowRadius = 1.5;
   static const double backgroundGlowPrimaryOpacity = 0.1;
   static const double backgroundGlowSecondaryOpacity = 0.05;
-  static const Color backgroundGlowPrimaryColor = Color(0xFFFFD764);
-  static const Color backgroundGlowSecondaryColor = Color.fromARGB(255, 255, 255, 255);
+  static const Color backgroundGlowPrimaryColor = AppColors.golden;
+  static const Color backgroundGlowSecondaryColor = AppColors.white;
 
   // Bezier Curve Control Points
   static const double bezierStartX = 0.0;

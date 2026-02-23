@@ -8,6 +8,7 @@ import 'user_select_controller.dart';
 import '../../constants/app_routes.dart';
 import '../../constants/app_colors.dart';
 import '../../constants/app_text_styles.dart';
+import '../../models/user_profile.dart';
 import '../../utils/responsive.dart';
 
 class UserSelectScreen extends StatefulWidget {
@@ -116,18 +117,6 @@ class _UserSelectScreenView extends StatelessWidget {
   }
 }
 
-class _ProfileData {
-  final String name;
-  final String? avatarAssetPath;
-  final bool isAddButton;
-
-  const _ProfileData({
-    required this.name,
-    this.avatarAssetPath,
-    this.isAddButton = false,
-  });
-}
-
 class _UserProfilesCarousel extends StatefulWidget {
   const _UserProfilesCarousel();
 
@@ -143,18 +132,18 @@ class _UserProfilesCarouselState extends State<_UserProfilesCarousel> with Singl
   int _activeIndex = 1; // Start at index 1 (MMC)
   int? _hoveredIndex;
 
-  final List<_ProfileData> _profiles = const [
-    _ProfileData(
+  final List<UserProfile> _profiles = const [
+    UserProfile(
       name: 'Add User',
       isAddButton: true,
     ),
-    _ProfileData(
+    UserProfile(
       name: 'MMC',
       avatarAssetPath: 'assets/images/mmc2.jpg',
     ),
-    _ProfileData(name: 'Guest 1'),
-    _ProfileData(name: 'Guest 2'),
-    _ProfileData(name: 'Guest 3'),
+    UserProfile(name: 'Guest 1'),
+    UserProfile(name: 'Guest 2'),
+    UserProfile(name: 'Guest 3'),
   ];
 
   @override
@@ -353,7 +342,7 @@ class _UserProfilesCarouselState extends State<_UserProfilesCarousel> with Singl
 }
 
 class _UserProfileCard extends StatelessWidget {
-  final _ProfileData profile;
+  final UserProfile profile;
   final bool isActive;
   final bool isHovered;
   final VoidCallback onTap;
@@ -460,7 +449,7 @@ class _UserAvatar extends StatelessWidget {
       final isMobile = Responsive.isMobile(context);
       final iconSize = isMobile ? 48.0 : 80.0;
 
-      return Container(
+      return ColoredBox(
         color: AppColors.darkGray,
         child: Center(
           child: Icon(
@@ -485,17 +474,12 @@ class _UserAvatar extends StatelessWidget {
     final hue = (name.codeUnits.fold<int>(0, (sum, c) => sum + c) % 360).toDouble();
     final color = HSLColor.fromAHSL(1.0, hue, 0.35, 0.32).toColor();
 
-    return Container(
+    return ColoredBox(
       color: color,
       child: Center(
         child: Text(
           initials,
-          style: TextStyle(
-            color: AppColors.white,
-            fontSize: isMobile ? 32 : 42,
-            fontWeight: FontWeight.w500,
-            decoration: TextDecoration.none,
-          ),
+          style: AppTextStyles.userInitials(isMobile: isMobile),
         ),
       ),
     );

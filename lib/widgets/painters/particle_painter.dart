@@ -4,27 +4,40 @@ import 'dart:math' as math;
 import '../../constants/intro_visual_constants.dart';
 import '../../constants/intro_layout_constants.dart';
 import '../../utils/particle_generator.dart';
+import '../../constants/app_colors.dart';
 
 /// Custom painter for rendering particle effects
 ///
 /// Follows Single Responsibility Principle - only handles particle painting
 /// Delegates particle repositioning to ParticleGenerator
 class ParticlePainter extends CustomPainter {
+  final math.Random _random = math.Random();
+
   final List<Particle> particles;
-  final double animationValue;
+  final Animation<double> animation;
   final ParticleGenerator particleGenerator;
+
+  final Paint _sharpPaint = Paint()..style = PaintingStyle.fill;
+  final Paint _blurryPaint = Paint();
+  final Paint _corePaint = Paint()
+    ..color = AppColors.white
+    ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1);
+
+  final Map<int, MaskFilter> _blurCache = <int, MaskFilter>{};
 
   ParticlePainter({
     required this.particles,
-    required this.animationValue,
+    required this.animation,
     ParticleGenerator? particleGenerator,
-  }) : particleGenerator = particleGenerator ?? ParticleGenerator();
+  })  : particleGenerator = particleGenerator ?? ParticleGenerator(),
+        super(repaint: animation);
 
   @override
   void paint(Canvas canvas, Size size) {
+    final animationValue = animation.value;
     for (var particle in particles) {
       _updateParticlePosition(particle);
-      _paintParticle(canvas, size, particle);
+      _paintParticle(canvas, size, particle, animationValue);
     }
   }
 
@@ -36,7 +49,7 @@ class ParticlePainter extends CustomPainter {
 
     // Check bounds and reposition if necessary
     if (_isParticleOutOfBounds(particle)) {
-      if (math.Random().nextDouble() < IntroVisualConstants.particleRepositionProbability) {
+      if (_random.nextDouble() < IntroVisualConstants.particleRepositionProbability) {
         particleGenerator.repositionParticle(particle);
       }
     }
@@ -51,7 +64,7 @@ class ParticlePainter extends CustomPainter {
   }
 
   /// Paints a single particle with sparkle animation
-  void _paintParticle(Canvas canvas, Size size, Particle particle) {
+  void _paintParticle(Canvas canvas, Size size, Particle particle, double animationValue) {
     final dx = particle.x * size.width;
     final dy = particle.y * size.height;
 
@@ -72,48 +85,40 @@ class ParticlePainter extends CustomPainter {
 
   /// Paints a sharp particle without blur
   void _paintSharpParticle(Canvas canvas, double dx, double dy, double size, double opacity, Particle particle) {
-    final sharpPaint = Paint()
-      ..color = particle.color.withValues(alpha: opacity)
-      ..style = PaintingStyle.fill;
-
     canvas.drawCircle(
       Offset(dx, dy),
       size,
-      sharpPaint,
+      _sharpPaint..color = particle.color.withValues(alpha: opacity),
     );
   }
 
   /// Paints a blurry particle with optional bright core
   void _paintBlurryParticle(Canvas canvas, double dx, double dy, double size, double opacity, Particle particle, double sparkle) {
-    // Draw blurry particle body
-    final blurryPaint = Paint()
-      ..color = particle.color.withValues(alpha: opacity)
-      ..maskFilter = MaskFilter.blur(BlurStyle.normal, size * IntroVisualConstants.sparkleBlurMultiplier);
+    final sigmaKey = (size * IntroVisualConstants.sparkleBlurMultiplier * 10).round(); // 0.1 sigma steps
+    final blurSigma = sigmaKey / 10.0;
+    final blurFilter = _blurCache.putIfAbsent(sigmaKey, () => MaskFilter.blur(BlurStyle.normal, blurSigma));
 
+    // Draw blurry particle body
     canvas.drawCircle(
       Offset(dx, dy),
       size,
-      blurryPaint,
+      _blurryPaint
+        ..color = particle.color.withValues(alpha: opacity)
+        ..maskFilter = blurFilter,
     );
 
     // Draw bright core when sparkling
     if (sparkle > IntroVisualConstants.sparkleThreshold) {
-      final corePaint = Paint()
-        ..color = const Color(0xFFFFFFFF).withValues(alpha: (sparkle - IntroVisualConstants.sparkleThreshold) * IntroVisualConstants.sparkleCoreIntensity)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1);
-
       canvas.drawCircle(
         Offset(dx, dy),
         size * IntroVisualConstants.sparkleCoreSize,
-        corePaint,
+        _corePaint..color = AppColors.white.withValues(alpha: (sparkle - IntroVisualConstants.sparkleThreshold) * IntroVisualConstants.sparkleCoreIntensity),
       );
     }
   }
 
   @override
   bool shouldRepaint(ParticlePainter oldDelegate) {
-    // Only repaint if animation value changed significantly (performance optimization)
-    return (oldDelegate.animationValue - animationValue).abs() > 0.001 ||
-           oldDelegate.particles != particles;
+    return oldDelegate.particles != particles || oldDelegate.animation != animation;
   }
 }
