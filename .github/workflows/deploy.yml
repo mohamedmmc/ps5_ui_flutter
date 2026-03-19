@@ -1,0 +1,48 @@
+name: 🚀 Deploy PS5 UI to Portfolio
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    name: Build Flutter Web & Deploy to OVH
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐦 Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.27.2'
+          channel: 'stable'
+          cache: true
+
+      - name: 📦 Install dependencies
+        run: flutter pub get
+
+      - name: 🔨 Build Flutter Web (release)
+        run: flutter build web --release --no-tree-shake-icons
+
+      - name: 🚚 Deploy via SCP to OVH
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.PORTFOLIO_SSH_HOST }}
+          username: ${{ secrets.PORTFOLIO_SSH_USER }}
+          password: ${{ secrets.PORTFOLIO_SSH_PASSWORD }}
+          port: 22
+          source: "build/web/*"
+          target: "/www/ps5"
+          strip_components: 2
+
+      - name: ✅ Notify success
+        if: success()
+        run: echo "✅ PS5 UI deployed successfully to OVH!"
+
+      - name: ❌ Notify failure
+        if: failure()
+        run: echo "❌ Deployment failed!"
+
