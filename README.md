@@ -1,141 +1,76 @@
-# PS5 UI Replica - Flutter
+<div align="center">
 
-A Flutter implementation of the PlayStation 5 user interface, replicating the sleek design and smooth animations of the PS5 dashboard.
+<img src="assets/images/fonts/SSTBold.TTF" width="0" alt="" />
 
-## Features
+# PS5 UI — Flutter Portfolio
 
-- **Intro Screen**: Animated welcome screen with glowing effects and pulsing PS button
-- **User Selection**: User profile selection screen
-- **Dashboard**: Full PS5-style dashboard with:
-  - Games and Media tabs
-  - Horizontal game/app carousel
-  - Dynamic background images
-  - Game details with progress, trophies, and news
-  - Featured media section for media apps
-  - Smooth animations and transitions
+**A PlayStation 5-inspired UI built with Flutter, used as an interactive developer portfolio**
 
-## Prerequisites
+[![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?style=for-the-badge&logo=flutter&logoColor=white)](https://flutter.dev)
+[![Dart](https://img.shields.io/badge/Dart-3.x-0175C2?style=for-the-badge&logo=dart&logoColor=white)](https://dart.dev)
+[![Web](https://img.shields.io/badge/Platform-Web-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white)](https://mohamedmmc.github.io)
 
-- Flutter SDK (3.6.0 or higher)
-- Dart SDK (3.6.1 or higher)
-- A device or emulator to run the app
+<br/>
 
-## Installation
+[![Live Demo](https://img.shields.io/badge/🎮%20Live%20Demo-mohamedmmc.github.io-0070D1?style=flat-square)](https://mohamedmmc.github.io)
+[![Portfolio](https://img.shields.io/badge/Portfolio-mohamedmelekchtourou.com-D4A86C?style=flat-square)](https://mohamedmelekchtourou.com)
 
-1. Navigate to the project directory:
-   ```bash
-   cd /Users/mohamedmelekchtourou/Desktop/ps5_ui_flutter
-   ```
+</div>
 
-2. Install dependencies:
-   ```bash
-   flutter pub get
-   ```
+---
 
-## Running the App
+## 🎮 About
 
-### On Desktop (macOS, Windows, Linux)
+A creative Flutter web app that replicates the **PlayStation 5 dashboard UI** and uses it as an interactive developer portfolio. Navigate through a PS5-inspired interface to discover projects, skills, and experience.
+
+> *"Why have a boring portfolio when you can have a PS5 one?"*
+
+---
+
+## ✨ Features
+
+- **🎬 Intro Screen** — Animated welcome with glowing effects and pulsing PS button
+- **👤 User Selection** — Profile selection screen (PS5 style)
+- **🏠 Dashboard** — Full PS5-style dashboard with Games & Media tabs
+- **🎮 Project Cards** — Each project displayed as a PS5 game card with details
+- **🖼️ Dynamic Backgrounds** — Background changes per selected project
+- **🏆 Details View** — Progress bars, trophies, tech stack per project
+- **📱 Smooth Animations** — Faithful to the PS5's fluid UX
+
+---
+
+## 🛠️ Stack
+
+| Technology | Usage |
+|---|---|
+| **Flutter + Dart** | Framework & language |
+| **go_router** | Navigation |
+| **GetX** | State management |
+| **Google Fonts** | Typography |
+| **cached_network_image** | Image loading |
+| **SST Font** | Authentic PS5 typography |
+
+---
+
+## 🚀 Run locally
+
 ```bash
-flutter run -d macos
-# or
-flutter run -d windows
-# or
-flutter run -d linux
-```
-
-### On Mobile (iOS, Android)
-```bash
-flutter run -d ios
-# or
-flutter run -d android
-```
-
-### On Web
-```bash
+git clone https://github.com/mohamedmmc/ps5_ui_flutter.git
+cd ps5_ui_flutter
+flutter pub get
 flutter run -d chrome
 ```
 
-**Note**: For the best experience, run the app on a device with a landscape orientation or a desktop platform.
+---
 
-## Project Structure
+## 🌐 Live
 
-```
-lib/
-├── main.dart                 # App entry point and navigation logic
-├── models/
-│   └── game.dart            # Data models (Game, FeaturedMedia, etc.)
-├── data/
-│   └── games_data.dart      # Static data for games and media
-├── screens/
-│   ├── intro_screen.dart    # Welcome/intro screen
-│   ├── user_select_screen.dart  # User selection screen
-│   └── dashboard_screen.dart    # Main dashboard
-└── widgets/
-    ├── top_bar.dart         # Top navigation bar
-    ├── game_row.dart        # Horizontal game carousel
-    └── hero_section.dart    # Game details section
+👉 **[mohamedmmc.github.io](https://mohamedmmc.github.io)**
 
-assets/
-└── images/
-    └── portfolio/           # Project portfolio images
-```
+---
 
-## Key Dependencies
+<div align="center">
 
-- `cached_network_image`: For efficient image loading and caching
-- `google_fonts`: For custom typography
-- `lucide_icons_flutter`: For icons matching the original design
+Built with ❤️ by **[Mohamed Melek Chtourou](https://mohamedmelekchtourou.com)**
 
-## Customization
-
-### Adding Your Own Games/Media
-
-Edit `lib/data/games_data.dart` to add or modify games and media apps:
-
-```dart
-Game(
-  id: 'your-game-id',
-  type: ContentType.game,
-  title: 'Your Game Title',
-  icon: 'path/to/icon.png',
-  background: 'https://your-background-image-url.jpg',
-  description: 'Your game description',
-  progress: 50,
-  // ... more properties
-)
-```
-
-### Modifying Colors and Styles
-
-- Colors and theme settings are in `lib/main.dart`
-- Individual component styles can be modified in their respective widget files
-
-## Known Limitations
-
-- Some images use network URLs and require internet connectivity
-- Local asset images need to be placed in the `assets/images/` directory
-- The app is optimized for landscape orientation
-
-## Original Project
-
-This is a Flutter port of the React-based PS5 UI replica. The original project used:
-- React + TypeScript
-- Vite
-- Framer Motion for animations
-- Tailwind CSS for styling
-
-## License
-
-This project is for educational purposes only. PlayStation and PS5 are trademarks of Sony Interactive Entertainment.
-
-## Screenshots
-
-The app includes:
-- Animated intro screen with glowing particles
-- User selection with profile avatars
-- Dashboard with dynamic backgrounds
-- Game details with progress tracking
-- Trophy display system
-- News and updates section
-
-Enjoy exploring the PS5 UI in Flutter!
+</div>
